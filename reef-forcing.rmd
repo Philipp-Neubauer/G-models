@@ -1,0 +1,13 @@
+---
+title: "Reef physical forcing model"
+author: "Philipp Neubauer"
+date: "August 21, 2017"
+output: 
+  pdf_document
+  word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
