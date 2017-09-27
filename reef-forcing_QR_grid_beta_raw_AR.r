@@ -1,7 +1,6 @@
 
   require(readr)
 require(dplyr)
-require(rlang)
 require(cowplot)
 require(rstan)
 rstan_options(auto_write = TRUE)
@@ -94,7 +93,7 @@ model_data <- get_vars(all_data,VAR)
 fit_MAR <- stan('model_QR_grid_beta_raw_AR.stan', 
               data = model_data, 
               iter = 1000,
-              chains = 3,
+              chains = 6,
               thin = 1,
               warmup = 500,
               #init = inits,
@@ -137,7 +136,7 @@ model_data <- get_vars(all_data,VAR)
 fit_CCAR <- stan('model_QR_grid_beta_raw_AR.stan', 
               data = model_data, 
               iter = 1000,
-              chains = 3,
+              chains = 6,
               thin = 1,
               warmup = 500,
               #init = inits,
@@ -182,7 +181,7 @@ model_data <- get_vars(all_data,VAR)
 fit_CAR <- stan('model_QR_grid_beta_raw_AR.stan', 
               data = model_data, 
               iter = 1000,
-              chains = 3,
+              chains = 6,
               thin = 1,
               warmup = 500,
               #init = inits,
