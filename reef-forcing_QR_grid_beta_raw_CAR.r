@@ -203,32 +203,32 @@ fit_CAR <- stan('model_QR_grid_beta_raw_CAR.stan',
                 verbose = T)
 
 save(fit_CAR,file='ARfit_raw_coral.Rdata')
-
-
-stan_trace(fit_CAR,
-           pars=c('omean','sigma','beta','lp__','scale','zmean'),
-           include=T)
-
-
-ry <- get_posterior_mean(fit_CAR,pars='resid_y')[,3]
-rys <- data.frame(g = model_data$GRID[model_data$ii_notzero],ry,i=model_data$ISLAND[model_data$ii_notzero])
-ggplot(rys) + geom_line(aes(x=g,y=ry)) + facet_wrap(~as.factor(i),scales='free')
-
-require(purrr)
-acc <- rys %>% split(.$i) %>% map(~acf(.$ry,plot=F,type='cov')) %>% map(~with(.,data.frame(lag,acf))) %>% bind_rows(.id='Island')
-ggplot(acc) + geom_line(aes(x=lag,y=acf)) + facet_wrap(~Island,scales='free')
-
-
-
-stan_plot(fit_C,
-          pars=c('beta'),
-          include=T,
-          show_density = TRUE,
-          fill_color = "lightblue") +
-  theme_cowplot() +
-  geom_vline(aes(xintercept=0), linetype=2, alpha=0.4)+
-  xlab('Effect size') +
-  ylab('')
+# 
+# 
+# stan_trace(fit_CAR,
+#            pars=c('omean','sigma','beta','lp__','scale','zmean'),
+#            include=T)
+# 
+# 
+# ry <- get_posterior_mean(fit_CAR,pars='resid_y')[,3]
+# rys <- data.frame(g = model_data$GRID[model_data$ii_notzero],ry,i=model_data$ISLAND[model_data$ii_notzero])
+# ggplot(rys) + geom_line(aes(x=g,y=ry)) + facet_wrap(~as.factor(i),scales='free')
+# 
+# require(purrr)
+# acc <- rys %>% split(.$i) %>% map(~acf(.$ry,plot=F,type='cov')) %>% map(~with(.,data.frame(lag,acf))) %>% bind_rows(.id='Island')
+# ggplot(acc) + geom_line(aes(x=lag,y=acf)) + facet_wrap(~Island,scales='free')
+# 
+# 
+# 
+# stan_plot(fit_C,
+#           pars=c('beta'),
+#           include=T,
+#           show_density = TRUE,
+#           fill_color = "lightblue") +
+#   theme_cowplot() +
+#   geom_vline(aes(xintercept=0), linetype=2, alpha=0.4)+
+#   xlab('Effect size') +
+#   ylab('')
 #' 
 #' 
 #' 
