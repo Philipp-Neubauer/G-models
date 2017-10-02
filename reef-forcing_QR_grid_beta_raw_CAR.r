@@ -182,10 +182,10 @@ model_data <- get_vars(all_data,VAR)
 
 fit_CAR <- stan('model_QR_grid_beta_raw_CAR.stan',
                 data = model_data,
-                iter = 500,
+                iter = 1000,
                 chains = 1,
                 thin = 1,
-                warmup = 300,
+                warmup = 500,
                 #init = inits,
                 pars = c('island_sig',
                   'group_sig',
@@ -199,7 +199,7 @@ fit_CAR <- stan('model_QR_grid_beta_raw_CAR.stan',
                   #'log_lik',
                   'omean',
                   'zmean'),
-                control = list(max_treedepth = 10, adapt_delta=0.8),
+                control = list(max_treedepth = 13, adapt_delta=0.8),
                 verbose = T)
 
 save(fit_CAR,file='ARfit_raw_coral.Rdata')
