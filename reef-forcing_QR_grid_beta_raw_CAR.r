@@ -42,8 +42,8 @@ get_vars <- function(data,var){
   nbs <- do.call(rbind,do.call(c,nbbs))
   N_edges <- nrow(nbs)
   #browser()
-  
-  W = Matrix::sparseMatrix(i=nbs[,1],j=nbs[,2],x=1,symmetric=TRUE)
+  require(Matrix)
+  W = sparseMatrix(i=nbs[,1],j=nbs[,2],x=1,symmetric=TRUE)
   
   COVS <- with(adata, as.matrix(
     data.frame(
