@@ -43,7 +43,7 @@ get_vars <- function(data,var){
   N_edges <- nrow(nbs)
   #browser()
   require(Matrix)
-  W = sparseMatrix(i=nbs[,1],j=nbs[,2],x=1,symmetric=TRUE)
+  W = sparseMatrix(i=nbs[,1],j=nbs[,2],x=1,symmetric=TRUE,check = F)
   
   COVS <- with(adata, as.matrix(
     data.frame(
