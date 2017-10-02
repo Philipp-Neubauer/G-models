@@ -8,7 +8,7 @@ options(mc.cores = 2)
 
 
 get_vars <- function(data,var){
-  require(INLA)
+  #require(INLA)
   adata <- data %>% filter(!is.na(TED_SUM),
                            !is.na(SURF_SUM)) %>% 
     mutate_(mm = var) %>%
