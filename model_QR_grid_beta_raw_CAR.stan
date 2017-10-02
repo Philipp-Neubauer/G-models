@@ -62,8 +62,8 @@ transformed data {
   vector[N_grid] D_sparse;     // diagonal of D (number of neigbors for each site)
 
   // thin and scale the QR decomposition
-  Q_ast = qr_Q(COVS)[, 1:K] * sqrt(N - 1);
-  R_ast = qr_R(COVS)[1:K, ] / sqrt(N - 1);
+  Q_ast = qr_Q(COVS)[, 1:K] * sqrt(N - 1.0);
+  R_ast = qr_R(COVS)[1:K, ] / sqrt(N - 1.0);
   R_ast_inverse = inverse(R_ast);
   
    { // generate sparse representation for W
