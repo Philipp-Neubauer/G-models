@@ -229,7 +229,7 @@ save(fit_CARtoon,file='CARtoonfit_raw_coral.Rdata')
 # 
 # 
 stan_trace(fit_CARtoon,
-            pars=c('omean','sigma','beta','lp__','scale','zmean','rho_mean','rho_prec','grid_mean','grid_var'),
+            pars=c('omean','beta','lp__','scale','zmean','rho_mean','rho_prec','grid_mean','grid_var'),
             include=T)
 # 
 # 
