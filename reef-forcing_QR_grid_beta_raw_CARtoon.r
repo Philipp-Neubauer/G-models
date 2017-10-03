@@ -4,7 +4,7 @@ require(dplyr)
 require(cowplot)
 require(rstan)
 rstan_options(auto_write = TRUE)
-options(mc.cores = 2)
+options(mc.cores = 4)
 
 
 get_vars <- function(data,var){
@@ -201,10 +201,10 @@ model_data <- get_vars(all_data,VAR)
 
 fit_CARtoon <- stan('model_QR_grid_beta_raw_CARtoon.stan',
                 data = model_data,
-                iter = 1000,
-                chains = 1,
+                iter = 2000,
+                chains = 4,
                 thin = 1,
-                warmup = 500,
+                warmup = 1000,
                 #init = inits,
                 pars = c('island_sig',
                   'group_sig',
@@ -222,15 +222,15 @@ fit_CARtoon <- stan('model_QR_grid_beta_raw_CARtoon.stan',
                   #'log_lik',
                   'omean',
                   'zmean'),
-                control = list(max_treedepth = 13, adapt_delta=0.8),
+                control = list(max_treedepth = 10, adapt_delta=0.8),
                 verbose = T)
 
 save(fit_CARtoon,file='CARtoonfit_raw_coral.Rdata')
 # 
 # 
-# stan_trace(fit_CAR,
-#            pars=c('omean','sigma','beta','lp__','scale','zmean'),
-#            include=T)
+stan_trace(fit_CARtoon,
+            pars=c('omean','sigma','beta','lp__','scale','zmean','rho_mean','rho_prec','grid_mean','grid_var'),
+            include=T)
 # 
 # 
 # ry <- get_posterior_mean(fit_CAR,pars='resid_y')[,3]
