@@ -137,12 +137,12 @@ model {
   scale ~ cauchy(1,2);
   
   island_fx ~ normal(0,1);
-  island_sig ~ cauchy(0,5);
+  island_sig ~ cauchy(0,1);
   group_fx ~ normal(0,1);
-  group_sig ~ cauchy(0,5);
-  
+  group_sig ~ cauchy(0,1);
+  group_sig ~ cauchy(0,1);
   grid_fx ~ sparse_car(grid_sig, rho, W_sparse, D_sparse, lambda, N_grid, W_n);
-  rho ~ beta(2, 2);
+  rho ~ beta(1, 1);
   
 }
 generated quantities{
