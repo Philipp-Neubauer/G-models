@@ -205,10 +205,10 @@ options(mc.cores = 4)
 load('CAR_coral.Rdata')
 fit_CARtoon <- stan('model_QR_grid_beta_raw_CARtoon.stan',
                 data = model_data,
-                iter = 2000,
+                iter = 1000,
                 chains = 4,
                 thin = 1,
-                warmup = 1000,
+                warmup = 500,
                 #init = inits,
                 pars = c('island_sig',
                   'group_sig',
@@ -226,7 +226,7 @@ fit_CARtoon <- stan('model_QR_grid_beta_raw_CARtoon.stan',
                   #'log_lik',
                   'omean',
                   'zmean'),
-                control = list(max_treedepth = 10, adapt_delta=0.8),
+                control = list(max_treedepth = 13, adapt_delta=0.8),
                 verbose = T)
 
 save(fit_CARtoon,file='CARtoonfit_raw_coral.Rdata')
