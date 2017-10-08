@@ -112,7 +112,7 @@ options(mc.cores = 4)
 
 
 load('CAR_macro.Rdata')
-fit_MARtoons <- stan('model_QR_grid_beta_raw_CARtoons.stan',
+fit_MARtoon <- stan('model_QR_grid_beta_raw_CARtoon.stan',
                                data = model_data,
                                iter = 1000,
                                chains = 4,
@@ -121,12 +121,12 @@ fit_MARtoons <- stan('model_QR_grid_beta_raw_CARtoons.stan',
                                init = function() list(rho_mean=0.1),
                                pars = c('island_sig',
                                         'group_sig',
-                                        #'grid_mean',
+                                        'grid_mean',
                                         'grid_sig',
-                                        #'grid_var',
-                                        #'rho',
+                                        'grid_var',
+                                        'rho',
                                         'rho_mean',
-                                        #'rho_prec',
+                                        'rho_prec',
                                         'resid_y',
                                         'beta',
                                         'gscale',
@@ -138,7 +138,7 @@ fit_MARtoons <- stan('model_QR_grid_beta_raw_CARtoons.stan',
                                control = list(max_treedepth = 12, adapt_delta=0.8),
                                verbose = T)
 
-save(fit_MARtoons,file='CARtoonsfit_raw_macroalgae.Rdata')
+save(fit_MARtoon,file='CARtoonfit_raw_macroalgae.Rdata')
 #
 # stan_trace(fit_MAR,
 #           pars=c('omean','sigma','grid_sig','beta','lp__','scale','zmean','island_sig','group_sig'),
@@ -154,7 +154,7 @@ save(fit_MARtoons,file='CARtoonsfit_raw_macroalgae.Rdata')
 
 load('CAR_cca.Rdata')
 
-fit_CCARtoons <- stan('model_QR_grid_beta_raw_CARtoons.stan',
+fit_CCARtoon <- stan('model_QR_grid_beta_raw_CARtoon.stan',
                      data = model_data,
                      iter = 1000,
                      chains = 4,
@@ -163,12 +163,12 @@ fit_CCARtoons <- stan('model_QR_grid_beta_raw_CARtoons.stan',
                      init = function() list(rho_mean=0.1),
                      pars = c('island_sig',
                               'group_sig',
-                              #'grid_mean',
+                              'grid_mean',
                               'grid_sig',
-                              #'grid_var',
-                              #'rho',
+                              'grid_var',
+                              'rho',
                               'rho_mean',
-                              #'rho_prec',
+                              'rho_prec',
                               'resid_y',
                               'beta',
                               'gscale',
@@ -180,7 +180,7 @@ fit_CCARtoons <- stan('model_QR_grid_beta_raw_CARtoons.stan',
                      control = list(max_treedepth = 12, adapt_delta=0.8),
                      verbose = T)
 
-save(fit_CCARtoons,file='CARtoonsfit_raw_cca.Rdata')
+save(fit_CCARtoon,file='CARtoonfit_raw_cca.Rdata')
 
 
 # 
@@ -208,7 +208,7 @@ save(fit_CCARtoons,file='CARtoonsfit_raw_cca.Rdata')
 
 
 load('CAR_coral.Rdata')
-fit_CARtoon <- stan('model_QR_grid_beta_raw_CARtoons.stan',
+fit_CARtoon <- stan('model_QR_grid_beta_raw_CARtoon.stan',
                 data = model_data,
                 iter = 1000,
                 chains = 4,
@@ -217,12 +217,12 @@ fit_CARtoon <- stan('model_QR_grid_beta_raw_CARtoons.stan',
                 init = function() list(rho_mean=0.1),
                 pars = c('island_sig',
                   'group_sig',
-                  #'grid_mean',
+                  'grid_mean',
                   'grid_sig',
-                  #'grid_var',
-                  #'rho',
+                  'grid_var',
+                  'rho',
                   'rho_mean',
-                  #'rho_prec',
+                  'rho_prec',
                   'resid_y',
                   'beta',
                   'gscale',
@@ -234,7 +234,7 @@ fit_CARtoon <- stan('model_QR_grid_beta_raw_CARtoons.stan',
                 control = list(max_treedepth = 12, adapt_delta=0.8),
                 verbose = T)
 
-save(fit_CARtoon,file='CARtoonsfit_raw_coral.Rdata')
+save(fit_CARtoon,file='CARtoonfit_raw_coral.Rdata')
 # 
 # 
 # stan_trace(fit_CARtoon,
