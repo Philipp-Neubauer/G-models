@@ -43,7 +43,6 @@ data {
   vector<lower = 0, upper = 1>[N_notzero] IMEAN;
   int<lower = 0, upper = 1> ZEROONE[N_zeroone];
   int<lower = 0> ii_notzero[N_notzero];
-  int<lower = 0> ii_map[N_notzero];
   int<lower = 0> ii_zeroone[N_zeroone];
   matrix[N, K] COVS;
   int<lower = 1, upper = N_islands> ISLAND[N];
@@ -76,13 +75,13 @@ parameters {
   vector[N_groups] group_fx;
   real<lower=0> island_sig;
   real<lower=0> group_sig;
-  vector<lower=0>[N_islands] grid_sig;
-  real<lower=0> grid_var;
-  real<lower=0> grid_mean;
+  //real<lower=0> grid_sig[N_islands];
+  //real<lower=0> grid_var;
+  real<lower=0> grid_sig;
   vector[N_grid] grid_fx;
-  real<lower=0, upper=1> rho[N_islands]; 
+  //real<lower=0, upper=1> rho[N_islands]; 
   real<lower=0, upper=1> rho_mean; 
-  real<lower=0> rho_prec;  
+  //real<lower=0> rho_prec;  
   real omean;
   real zmean;
   vector[K] theta;
@@ -93,7 +92,7 @@ transformed parameters{
  vector<lower=0>[N_notzero] a;
  vector<lower=0>[N_notzero] b;
   
- imean = Q_ast*theta+ island_sig*island_fx[ISLAND]+group_sig*group_fx[GROUP]+ grid_sig[ISLAND].*grid_fx[GRID];
+ imean = Q_ast*theta+ island_sig*island_fx[ISLAND]+group_sig*group_fx[GROUP]+ grid_fx[GRID]*grid_sig;
 
  mu = inv_logit(omean+imean[ii_notzero]);
  a  =    mu  .* iscale[ISLAND[ii_notzero]];
@@ -127,28 +126,28 @@ model {
   island_sig ~ cauchy(0,2);
   group_fx ~ normal(0,1);
   group_sig ~ cauchy(0,2);
-  grid_sig ~ cauchy(grid_mean,grid_var);
-  grid_mean ~ cauchy(0,2);
-  grid_var ~ cauchy(0,2);
+  grid_sig ~ cauchy(0,2);
+  //grid_mean ~ cauchy(0,1);
+  //grid_var ~ cauchy(0,1);
   
   pos=1;
   ppos=1;
   for (i in 1:N_islands) {
-    segment(grid_fx,pos,grids[i]) ~ sparse_car(rho[i], segment(W_sparse,ppos,W_n[i]), segment(D_sparse,pos,grids[i]), segment(lambda,pos,grids[i]), grids[i], W_n[i]);
+    segment(grid_fx,pos,grids[i]) ~ sparse_car(rho_mean, segment(W_sparse,ppos,W_n[i]), segment(D_sparse,pos,grids[i]), segment(lambda,pos,grids[i]), grids[i], W_n[i]);
     pos = pos + grids[i];
     ppos = ppos + W_n[i];
   }
   
  rho_mean  ~ beta(1, 1);
- rho_prec  ~ cauchy(0,1);
- a_r  = rho_mean  * rho_prec;
- b_r  = (1-rho_mean)  * rho_prec;
+ //rho_prec  ~ cauchy(0,10);
+ //a_r  = rho_mean  * rho_prec;
+ //b_r  = (1-rho_mean)  * rho_prec;
   
- rho ~ beta(a_r, b_r);
+ //rho ~ beta(a_r, b_r);
   
 }
 generated quantities{
-   vector[N_zeroone] log_lik;
+  vector[N_zeroone] log_lik;
   vector[K] beta;
   vector[N_notzero] resid_y;
   beta = R_ast_inverse * theta; // coefficients
