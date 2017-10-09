@@ -157,5 +157,5 @@ generated quantities{
   // Hurdle part of the likelihood for 0-1 draws
   for (i in 1:N_zeroone) log_lik[ii_zeroone[i]] =+ bernoulli_logit_lpmf(ZEROONE[i] | zmean + scale*imean[ii_zeroone[i]]);
    // beta_pdf for means and draws
-  for (i in 1:N_notzero) log_lik[ii_notzero[i]] = beta_lpdf(IMEAN[i] | a[i], b[i]);
+  for (i in 1:N_notzero) log_lik[ii_map[i]] = beta_lpdf(IMEAN[i] | a[i], b[i]);
 }
