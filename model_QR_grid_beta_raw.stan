@@ -19,8 +19,8 @@ transformed data {
   matrix[K, K] R_ast_inverse;
   
   // thin and scale the QR decomposition
-  Q_ast = qr_Q(COVS)[, 1:K] * sqrt(N - 1);
-  R_ast = qr_R(COVS)[1:K, ] / sqrt(N - 1);
+  Q_ast = qr_Q(COVS)[, 1:K] * sqrt(N - 1.0);
+  R_ast = qr_R(COVS)[1:K, ] / sqrt(N - 1.0);
   R_ast_inverse = inverse(R_ast);
   
 }
