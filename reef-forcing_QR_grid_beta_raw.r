@@ -181,30 +181,5 @@ fit_C <- stan('model_QR_grid_beta_raw.stan',
 
 save(fit_C,file='fit_raws_coral.Rdata')
 
-# stan_trace(fit_C, 
-#           pars=c('log-posterior','log_lik','iscale'), 
-#           include=F)
-# 
-# stan_plot(fit_C, 
-#           pars=c('beta'), 
-#           include=T, 
-#           show_density = TRUE, 
-#           fill_color = "lightblue") + 
-#   theme_cowplot() + 
-#   geom_vline(aes(xintercept=0), linetype=2, alpha=0.4)+
-#   xlab('Effect size') + 
-#   ylab('')
-
-
-# 
-# 
-# W.nb <- dnearneigh(as.matrix(expand.grid(1:nrows,1:ncols)),0,1.5)
-# W <- nb2mat(W.nb,style = 'B')
-# 
-# D <- diag(rowSums(as.matrix(W)))
-
-
-```
-
 
 
