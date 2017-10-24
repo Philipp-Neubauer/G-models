@@ -68,15 +68,15 @@ transformed data {
 
 }
 parameters {
-  vector[N_islands] island_fx;
+  //vector[N_islands] island_fx;
   //vector<lower=0>[N_islands] iscale;
   real<lower=0> gscale;
   //real<lower=0> gmscale;
   //real<lower=0> vscale;
   real<lower=0> scale;
-  vector[N_groups] group_fx;
-  real<lower=0> island_sig;
-  real<lower=0> group_sig;
+  //vector[N_groups] group_fx;
+  //real<lower=0> island_sig;
+  //real<lower=0> group_sig;
   vector<lower=0>[N_islands] grid_sig;
   real<lower=0> grid_var;
   real<lower=0> grid_mean;
@@ -94,11 +94,11 @@ transformed parameters{
  vector<lower=0>[N_notzero] a;
  vector<lower=0>[N_notzero] b;
   
- imean = Q_ast*theta+ island_sig*island_fx[ISLAND]+group_sig*group_fx[GROUP]+ grid_sig[ISLAND].*grid_fx[GRID];
+ imean = Q_ast*theta+ grid_sig[ISLAND].*grid_fx[GRID];
 
  mu = inv_logit(omean+imean[ii_notzero]);
- a  =    mu  * gscale;#iscale[ISLAND[ii_notzero]];
- b  = (1-mu) * gscale;#[ISLAND[ii_notzero]];
+ a  =    mu  * gscale;//iscale[ISLAND[ii_notzero]];
+ b  = (1-mu) * gscale;//[ISLAND[ii_notzero]];
  
 
 }
@@ -125,10 +125,10 @@ model {
   theta ~ cauchy(0,5);
   scale ~ cauchy(1,5);
   
-  island_fx ~ normal(0,1);
-  island_sig ~ cauchy(0,2);
-  group_fx ~ normal(0,1);
-  group_sig ~ cauchy(0,2);
+  //island_fx ~ normal(0,1);
+  //island_sig ~ cauchy(0,2);
+  //group_fx ~ normal(0,1);
+  //group_sig ~ cauchy(0,2);
   grid_sig ~ cauchy(grid_mean,grid_var);
   grid_mean ~ cauchy(0,2);
   grid_var ~ cauchy(0,2);
@@ -141,8 +141,8 @@ model {
     ppos = ppos + W_n[i];
   }
   
- rho_mean  ~ beta(10, 2);
- rho_prec  ~ cauchy(0,1);
+ rho_mean  ~ beta(2, 2);
+ rho_prec  ~ cauchy(0,5);
  a_r  = rho_mean  * rho_prec;
  b_r  = (1-rho_mean)  * rho_prec;
   

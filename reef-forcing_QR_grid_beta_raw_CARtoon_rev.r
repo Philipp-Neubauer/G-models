@@ -150,8 +150,8 @@ fit_MARtoon_rev <- stan('model_QR_grid_beta_raw_CARtoon_rev.stan',
                                thin = 1,
                                warmup = 400,
                                init = function() list(rho=rep(0.01,model_data$N_islands)),
-                               pars = c('island_sig',
-                                        'group_sig',
+                               pars = c(#'island_sig',
+                                        #'group_sig',
                                         'grid_mean',
                                         'grid_sig',
                                         'grid_var',
@@ -171,10 +171,10 @@ fit_MARtoon_rev <- stan('model_QR_grid_beta_raw_CARtoon_rev.stan',
 
 save(fit_MARtoon_rev,file='CARtoonfit_raw_macroalgae_rev.Rdata')
 # 
-# stan_trace(fit_MARtoon_rev,
-#           #pars=c('omean','rho_mean','grid_mean','beta','lp__','scale','zmean','island_sig','group_sig'),
-#           pars=c('rho_prec'),
-#           include=T)
+stan_trace(fit_MARtoon_rev,
+          pars=c('omean','rho','grid_mean','beta','lp__','scale','zmean','island_sig','group_sig'),
+          #pars=c('rho_prec'),
+          include=T)
 # 
 # stan_plot(fit_MARtoon_rev,
 #           pars=c('beta'),
