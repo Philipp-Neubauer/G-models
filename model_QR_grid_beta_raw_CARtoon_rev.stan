@@ -146,7 +146,7 @@ model {
  //a_r  = rho_mean  * rho_prec;
  //b_r  = (1-rho_mean)  * rho_prec;
   
- rho ~ beta(10, 10);
+ rho ~ beta(10, 2);
   
 }
 generated quantities{
