@@ -94,7 +94,7 @@ transformed parameters{
  vector<lower=0>[N_notzero] a;
  vector<lower=0>[N_notzero] b;
   
- imean = Q_ast*theta+ island_sig*island_fx[ISLAND]+group_sig*group_fx[GROUP]+ grid_sig[ISLAND].*grid_fx[GRID;
+ imean = Q_ast*theta+ island_sig*island_fx[ISLAND]+group_sig*group_fx[GROUP]+ grid_sig[ISLAND].*grid_fx[GRID];
 
  mu = inv_logit(omean+imean[ii_notzero]);
  a  =    mu  * gscale;#iscale[ISLAND[ii_notzero]];

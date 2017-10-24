@@ -36,7 +36,13 @@ options(mc.cores = 4)
 #     grd <- vector(,li)
 #     grd[1] <- 1
 #     for (id in 2:li){
-#       if(ids[id] == ids[id-1] | (ids[id] == ids[id-1]+1 & cvs[id] == cvs[id-1])) grd[id] <- grd[id-1] else grd[id] <- grd[id-1]+1
+#       if(ids[id] == ids[id-1] | (ids[id] == ids[id-1]+1 & cvs[id] == cvs[id-1])) {
+#         grd[id] <- grd[id-1] 
+#         } else if(ids[id] == ids[id-1]+1 & cvs[id] != cvs[id-1]) {
+#           grd[id] <- grd[id-1]+1
+#         } else {
+#           grd[id] <- grd[id-1]+2
+#         }
 #     }
 #     adata$GRID_ID[island==islands[i]] <- grd
 #   }
@@ -126,15 +132,15 @@ options(mc.cores = 4)
 # rdata <- read_csv('./model/data/RAW_BENTHIC_ALL_ISLANDS.csv')
 # #
 # all_data <- inner_join(rdata,cdata)
-# 
-# 
-# ## MACROALGAE
-# 
+# # 
+# # 
+# # ## MACROALGAE
+# # 
 # VAR <- 'MACRO'
 # model_data <- get_vars(all_data,VAR)
 # 
 # save(model_data,file='CAR_macro_rev.Rdata')
-# 
+
 
 load('CAR_macro_rev.Rdata')
 fit_MARtoon_rev <- stan('model_QR_grid_beta_raw_CARtoon_rev.stan',
