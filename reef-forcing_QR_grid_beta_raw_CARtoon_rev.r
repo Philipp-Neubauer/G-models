@@ -146,7 +146,7 @@ load('CAR_macro_rev.Rdata')
 fit_MARtoon_rev <- stan('model_QR_grid_beta_raw_CARtoon_rev.stan',
                                data = model_data,
                                iter = 700,
-                               chains = 6,
+                               chains = 2,
                                thin = 1,
                                warmup = 400,
                                init = function() list(rho=rep(0.01,model_data$N_islands)),
