@@ -69,8 +69,9 @@ transformed data {
 }
 parameters {
   vector[N_islands] island_fx;
-  vector<lower=0>[N_islands] iscale;
+  //vector<lower=0>[N_islands] iscale;
   real<lower=0> gscale;
+  //real<lower=0> gmscale;
   //real<lower=0> vscale;
   real<lower=0> scale;
   vector[N_groups] group_fx;
@@ -81,8 +82,8 @@ parameters {
   real<lower=0> grid_mean;
   vector[N_grid] grid_fx;
   real<lower=0, upper=1> rho[N_islands]; 
-  real<lower=0, upper=1> rho_mean; 
-  real<lower=0> rho_prec;  
+  //real<lower=0, upper=1> rho_mean; 
+  //real<lower=0> rho_prec;  
   real omean;
   real zmean;
   vector[K] theta;
@@ -93,24 +94,25 @@ transformed parameters{
  vector<lower=0>[N_notzero] a;
  vector<lower=0>[N_notzero] b;
   
- imean = Q_ast*theta+ island_sig*island_fx[ISLAND]+group_sig*group_fx[GROUP];
+ imean = Q_ast*theta+ island_sig*island_fx[ISLAND]+group_sig*group_fx[GROUP]+ grid_sig[ISLAND].*grid_fx[GRID;
 
- mu = inv_logit(omean+imean[ii_notzero]+ grid_sig[ISLAND[ii_notzero]].*grid_fx[GRID[ii_notzero]]);
- a  =    mu  .* iscale[ISLAND[ii_notzero]];
- b  = (1-mu) .* iscale[ISLAND[ii_notzero]];
+ mu = inv_logit(omean+imean[ii_notzero]);
+ a  =    mu  * gscale;#iscale[ISLAND[ii_notzero]];
+ b  = (1-mu) * gscale;#[ISLAND[ii_notzero]];
  
 
 }
 model {
   int pos;
   int ppos;
-  real a_r;
-  real b_r;
+  //real a_r;
+  //real b_r;
   
  
     // model for within grid sd, hierarchical across islands
-  iscale ~ cauchy(0,gscale);
+  //iscale ~ cauchy(gmscale,gscale);
   gscale ~ cauchy(0,10);
+  //gmscale ~ cauchy(0,10);
   
   IMEAN ~ beta(a,b);
   
@@ -139,12 +141,12 @@ model {
     ppos = ppos + W_n[i];
   }
   
- rho_mean  ~ beta(1, 1);
- rho_prec  ~ cauchy(0,1);
- a_r  = rho_mean  * rho_prec;
- b_r  = (1-rho_mean)  * rho_prec;
+ //rho_mean  ~ beta(1, 1);
+ //rho_prec  ~ cauchy(0,1);
+ //a_r  = rho_mean  * rho_prec;
+ //b_r  = (1-rho_mean)  * rho_prec;
   
- rho ~ beta(a_r, b_r);
+ rho ~ beta(1, 1);
   
 }
 generated quantities{

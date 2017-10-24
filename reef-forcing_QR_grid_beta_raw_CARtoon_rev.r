@@ -5,7 +5,7 @@ require(rstan)
 rstan_options(auto_write = TRUE)
 options(mc.cores = 4)
 
-
+# 
 # get_vars <- function(data,var){
 #   #require(INLA)
 #   adata <- data %>% filter(!is.na(TED_SUM),
@@ -20,27 +20,27 @@ options(mc.cores = 4)
 #            TED_INT   = round(scale(TED_SUM*distant_hum_pop)[,1],1),
 #            SURF_INT  = round(scale(SURF_SUM*distant_hum_pop)[,1],1),
 #            UCOVS = paste(DPOP,TED_SUMS,TED_INT,SURF_SUMS,SURF_INT))
-#   
-#   
+# 
+# 
 # 
 #   pmax <- 0
 #   island <- as.numeric(as.factor(adata$ISLAND))
 #   islands <- unique(island)
-#   
+# 
 #   for (i in 1:length(islands)) {
 #     cat(i,'\n')
 #     ids  <- adata$GRID_ID[island==islands[i]]
 #     cvs  <- adata$UCOVS[island==islands[i]]
-#     
+# 
 #     li <- sum(island==islands[i])
 #     grd <- vector(,li)
 #     grd[1] <- 1
 #     for (id in 2:li){
-#       if(ids[id] == ids[id-1] | (ids[id] == ids[id-1]+1 & cvs[id] == cvs[id-1])) grd[id] <- grd[id-1] else grd[id] <- grd[id-1]+1 
+#       if(ids[id] == ids[id-1] | (ids[id] == ids[id-1]+1 & cvs[id] == cvs[id-1])) grd[id] <- grd[id-1] else grd[id] <- grd[id-1]+1
 #     }
 #     adata$GRID_ID[island==islands[i]] <- grd
 #   }
-#   
+# 
 #   nbbs <- list()
 #   idds <- list()
 #   D_sparses <- list()
@@ -134,15 +134,15 @@ options(mc.cores = 4)
 # model_data <- get_vars(all_data,VAR)
 # 
 # save(model_data,file='CAR_macro_rev.Rdata')
-
+# 
 
 load('CAR_macro_rev.Rdata')
 fit_MARtoon_rev <- stan('model_QR_grid_beta_raw_CARtoon_rev.stan',
                                data = model_data,
-                               iter = 400,
+                               iter = 700,
                                chains = 2,
                                thin = 1,
-                               warmup = 200,
+                               warmup = 500,
                                init = function() list(rho_mean=0.1),
                                pars = c('island_sig',
                                         'group_sig',
@@ -160,15 +160,34 @@ fit_MARtoon_rev <- stan('model_QR_grid_beta_raw_CARtoon_rev.stan',
                                         'log_lik',
                                         'omean',
                                         'zmean'),
-                               control = list(max_treedepth = 10, adapt_delta=0.8),
+                               control = list(max_treedepth = 12, adapt_delta=0.8),
                                verbose = T)
 
 save(fit_MARtoon_rev,file='CARtoonfit_raw_macroalgae_rev.Rdata')
 # 
-# stan_trace(fit_MARtoons,
-#           pars=c('omean','grid_sig','beta','lp__','scale','zmean','island_sig','group_sig'),
+# stan_trace(fit_MARtoon_rev,
+#           #pars=c('omean','rho_mean','grid_mean','beta','lp__','scale','zmean','island_sig','group_sig'),
+#           pars=c('rho_prec'),
 #           include=T)
 # 
+# stan_plot(fit_MARtoon_rev,
+#           pars=c('beta'),
+#           include=T,
+#           show_density = TRUE,
+#           fill_color = "lightblue") +
+#   theme_cowplot() +
+#   geom_vline(aes(xintercept=0), linetype=2, alpha=0.4)+
+#   xlab('Effect size') +
+#   ylab('')
+# 
+# 
+# ry <- get_posterior_mean(fit_MARtoon,pars='resid_y')[,1]
+# rys <- data.frame(g = model_data$GRID[model_data$ii_notzero],ry,i=model_data$ISLAND[model_data$ii_notzero],imean=logit(model_data$IMEAN))
+# ggplot(rys) + geom_line(aes(x=g,y=ry)) + facet_wrap(~as.factor(i),scales='free')
+# 
+# require(purrr)
+# acc <- rys %>% split(.$i) %>% map(~acf(.$imean,plot=F,type='cov',lag.max = 1000)) %>% map(~with(.,data.frame(lag,acf))) %>% bind_rows(.id='Island')
+# ggplot(acc) + geom_line(aes(x=lag,y=acf)) + facet_wrap(~Island,scales='free')
 
 ## CCA
 
