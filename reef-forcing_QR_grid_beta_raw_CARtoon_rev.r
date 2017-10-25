@@ -171,10 +171,10 @@ fit_MARtoon_rev <- stan('model_QR_grid_beta_raw_CARtoon_rev.stan',
 
 save(fit_MARtoon_rev,file='CARtoonfit_raw_macroalgae_rev.Rdata')
 # 
-stan_trace(fit_MARtoon_rev,
-          pars=c('omean','rho','grid_mean','beta','lp__','scale','zmean','island_sig','group_sig'),
-          #pars=c('rho_prec'),
-          include=T)
+# stan_trace(fit_MARtoon_rev,
+#           pars=c('omean','rho','grid_mean','beta','lp__','scale','zmean','island_sig','group_sig'),
+#           #pars=c('rho_prec'),
+#           include=T)
 # 
 # stan_plot(fit_MARtoon_rev,
 #           pars=c('beta'),
@@ -187,13 +187,14 @@ stan_trace(fit_MARtoon_rev,
 #   ylab('')
 # 
 # 
-# ry <- get_posterior_mean(fit_MARtoon,pars='resid_y')[,1]
-# rys <- data.frame(g = model_data$GRID[model_data$ii_notzero],ry,i=model_data$ISLAND[model_data$ii_notzero],imean=logit(model_data$IMEAN))
-# ggplot(rys) + geom_line(aes(x=g,y=ry)) + facet_wrap(~as.factor(i),scales='free')
-# 
-# require(purrr)
-# acc <- rys %>% split(.$i) %>% map(~acf(.$imean,plot=F,type='cov',lag.max = 1000)) %>% map(~with(.,data.frame(lag,acf))) %>% bind_rows(.id='Island')
-# ggplot(acc) + geom_line(aes(x=lag,y=acf)) + facet_wrap(~Island,scales='free')
+logit <- function(p) log(p/(1-p))
+ry <- get_posterior_mean(fit_MARtoon_rev,pars='resid_y')[,1]
+rys <- data.frame(g = model_data$GRID[model_data$ii_notzero],ry,i=model_data$ISLAND[model_data$ii_notzero],imean=logit(model_data$IMEAN))
+ggplot(rys) + geom_line(aes(x=g,y=ry)) + facet_wrap(~as.factor(i),scales='free')
+
+require(purrr)
+acc <- rys %>% arrange(i,g) %>% split(.$i) %>% map(~acf(.$ry,plot=F,type='cov')) %>% map(~with(.,data.frame(lag,acf))) %>% bind_rows(.id='Island')
+ggplot(acc) + geom_line(aes(x=lag,y=acf)) + facet_wrap(~Island,scales='free')
 
 ## CCA
 
