@@ -4,8 +4,8 @@ require(cowplot)
 require(rstan)
 rstan_options(auto_write = TRUE)
 options(mc.cores = 8)
-
-
+# 
+# 
 # get_vars <- function(data,var){
 #   #require(INLA)
 #   adata <- data %>% filter(!is.na(TED_SUM),
@@ -49,7 +49,7 @@ options(mc.cores = 8)
 # 
 #   nbbs <- list()
 #   idds <- list()
-#     
+# 
 #   D_sparses <- list()
 #   lambdas <- list()
 #   W_n <- vector(,length(islands))
@@ -64,7 +64,6 @@ options(mc.cores = 8)
 #         if(!any(ids==(id+1))) NULL
 #         else c(i,i+1)
 #       }
-#       else {c(1,i)}
 # 
 #     })
 # 
