@@ -1,11 +1,11 @@
-# require(readr)
-# require(dplyr)
-# require(cowplot)
-# require(rstan)
-# rstan_options(auto_write = TRUE)
-# options(mc.cores = 4)
-# 
-# 
+require(readr)
+require(dplyr)
+require(cowplot)
+require(rstan)
+rstan_options(auto_write = TRUE)
+options(mc.cores = 8)
+
+
 # get_vars <- function(data,var){
 #   #require(INLA)
 #   adata <- data %>% filter(!is.na(TED_SUM),
