@@ -118,8 +118,6 @@ model {
   group_fx ~ normal(0,1);
   group_sig ~ cauchy(0,2);
   grid_sig ~ cauchy(0,2);
-  t_mean ~ cauchy(0,5);
-  t_var ~ cauchy(0,5);
   
   pos=1;
   ppos=1;
