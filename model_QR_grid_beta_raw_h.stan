@@ -39,7 +39,9 @@ parameters {
   real<lower=0> grid_sig;
   real<lower=0> grid_sigvar;
   real omean;
-  vector[K] theta;
+  vector[K] t_mean;
+  vector<lower=0>[K] t_var;
+  matrix[N_islands,K] theta;
 }
 transformed parameters{
  vector[N] imean;
@@ -47,7 +49,7 @@ transformed parameters{
  vector<lower=0>[N_notzero] a;
  vector<lower=0>[N_notzero] b;
   
- imean = Q_ast*theta+island_sig*island_fx[ISLAND]+group_sig*group_fx[GROUP]+grid_sigs[ISLAND].*grid_fx[GRID];
+ imean = rows_dot_product(Q_ast,theta[ISLAND,1:K])+island_sig*island_fx[ISLAND]+group_sig*group_fx[GROUP]+grid_sigs[ISLAND].*grid_fx[GRID];
 
  mu = inv_logit(omean+imean[ii_notzero]);
  a  =    mu  .* iscale[ISLAND[ii_notzero]];
@@ -66,27 +68,31 @@ model {
   ZEROONE ~ bernoulli_logit(zmean+scale*imean);
   
   //regression coeffs
-  omean ~ cauchy(0,10);
-  zmean ~ cauchy(0,10);
-  theta ~ cauchy(0,5);
+  omean ~ cauchy(0,5);
+  zmean ~ cauchy(0,5);
   scale ~ cauchy(0,5);
   
+  t_mean ~ cauchy(0,1);
+  t_var ~ cauchy(0,1);
+  
+  for (i in 1:N_islands) theta[i,1:K] ~ cauchy(t_mean,t_var);
+  
   island_fx ~ normal(0,1);
-  island_sig ~ cauchy(0,5);
+  island_sig ~ cauchy(0,1);
   group_fx ~ normal(0,1);
-  group_sig ~ cauchy(0,5);
+  group_sig ~ cauchy(0,1);
   grid_fx ~ normal(0,1);
   grid_sigs ~ cauchy(grid_sig, grid_sigvar);
-  grid_sig ~ cauchy(0,5);
-  grid_sigvar ~ cauchy(0,5);
+  grid_sig ~ cauchy(0,1);
+  grid_sigvar ~ cauchy(0,1);
   
 }
 generated quantities{
   vector[N] log_lik;
   //vector[N] resid_z;
   vector[N_notzero] resid_y;
-  vector[K] beta;
-  beta = R_ast_inverse * theta; // coefficients
+  vector[K] beta[N_islands];
+    for (i in 1:N_islands) beta[i] = R_ast_inverse*to_vector(theta[i,1:K]); // coefficients
   // bernoulli for 0-1 
   for (i in 1:N) log_lik[i] =+ bernoulli_logit_lpmf(ZEROONE[i] | zmean+scale*imean[i]);
   // beta_pdf for positive draws
