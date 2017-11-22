@@ -165,7 +165,7 @@ fit_MARtoon_rev <- stan('model_QR_grid_beta_raw_CARtoon_ind.stan',
 save(fit_MARtoon_rev,file='CARtoonfit_raw_macroalgae_ind.Rdata')
 # 
 gg <- stan_trace(fit_MARtoon_rev,
-          pars=c('omean','rho[1]','rho[10]','beta[27,2]','grid_mean','t_mean','lp__','scale','zmean','island_sig','group_sig'),
+          pars=c('omean','rho[1]','rho[10]','beta[27,2]','lp__','scale','zmean','island_sig','group_sig'),
           #pars=c('rho_prec'),
           include=T)
 ggsave(gg,file='traces.pdf')
