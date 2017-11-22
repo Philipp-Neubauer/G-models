@@ -78,10 +78,6 @@ fit_M <- stan('model_QR_grid_beta_raw_ind.stan',
 
 save(fit_M,file='fit_raw_macroalgae_ind.Rdata')
 
-rz <- get_posterior_mean(fit_M,pars='resid_z')[,3]
-rzs <- data.frame(g = model_data$GRID,rz,i=model_data$ISLAND)
-ggplot(rzs) + geom_line(aes(x=g,y=rz)) + facet_wrap(~as.factor(i),scales='free')
-
 ry <- get_posterior_mean(fit_M,pars='resid_y')[,3]
 rys <- data.frame(g = model_data$GRID[model_data$ii_notzero],ry,i=model_data$ISLAND[model_data$ii_notzero])
 ggplot(rys) + geom_line(aes(x=g,y=ry)) + facet_wrap(~as.factor(i),scales='free')
