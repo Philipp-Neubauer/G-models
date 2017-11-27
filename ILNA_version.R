@@ -2,7 +2,23 @@ require(INLA)
 require(dplyr)
 require(readr)
 
-# 
+
+form <- y ~ 0 + z.b0 + y.b0 + 
+  f(Island.y.c1,TED_SUMS.y,model='iid',
+    hyper=list(theta=list(prior="loggamma",param=c(1,0.001)))) + 
+  f(Island.z.c1,copy='Island.y.c1') + 
+  
+  f(Island.y.c2,SURF_SUMS.y,model='iid',
+    hyper=list(theta=list(prior="loggamma",param=c(1,0.001)))) +  
+  f(Island.z.c2,copy='Island.y.c2') +  
+  
+  f(Island.y,model='iid',
+    hyper=list(theta=list(prior="loggamma",param=c(1,0.001)))) +  
+  f(Island.z,copy='Island.y') +  
+  
+  f(grid.y, model='bym', graph=g,scale.model =T,control.group=list(model="exchangeable")) +
+  f(grid.z, copy='grid.y')
+
 # 
 # get_vars <- function(data,var){
 #   #require(INLA)
@@ -18,18 +34,18 @@ require(readr)
 #            #TED_INT   = round(scale(TED_SUM*distant_hum_pop)[,1],1),
 #            PHYS_INT  = round(scale(SURF_SUM*TED_SUM)[,1],1),
 #            UCOVS = paste(TED_SUMS,SURF_SUMS,PHYS_INT))
-#   
-#   
-#   
+# 
+# 
+# 
 #   pmax <- 0
 #   island <- as.numeric(as.factor(adata$ISLAND))
 #   islands <- unique(island)
-#   
+# 
 #   for (i in 1:length(islands)) {
 #     cat(i,'\n')
 #     ids  <- adata$GRID_ID[island==islands[i]]
 #     cvs  <- adata$UCOVS[island==islands[i]]
-#     
+# 
 #     li <- sum(island==islands[i])
 #     grd <- vector(,li)
 #     grd[1] <- pmax+1
@@ -45,10 +61,10 @@ require(readr)
 #     pmax=max(grd)
 #     adata$GRID_ID[island==islands[i]] <- grd
 #   }
-#   
+# 
 #   nbbs <- list()
 #   idds <- list()
-#   
+# 
 #   D_sparses <- list()
 #   lambdas <- list()
 #   W_n <- vector(,length(islands))
@@ -64,31 +80,31 @@ require(readr)
 #         else c(i,i+1)+pmax
 #       }
 #       else {c(i,1)+pmax}
-#       
+# 
 #     })
-#     
+# 
 #     idds[[i]] <- match(ids,unique(ids))+pmax
 #     pmax <- pmax + length(unique(ids))
-#     
+# 
 #   }
-#   
+# 
 #   D_sparse <- do.call(c,D_sparses)
 #   lambda <- do.call(c,lambdas)
 #   GRID <- do.call(c,idds)
 #   N_grid <- length(unique(GRID))
 #   nbs <- do.call(rbind,do.call(c,nbbs))
 #   N_edges <- nrow(nbs)
-#   
+# 
 #   require(Matrix)
-#   
+# 
 #   COVS <- with(adata, as.matrix(
 #     data.frame(TED_SUMS,
 #                SURF_SUMS,
 #                PHYS_INT
 #     )))
-#   
+# 
 #   #browser()
-#   
+# 
 #   with(adata,list(
 #     W_sparse  = nbs,
 #     D_sparse  = D_sparse,
@@ -113,69 +129,50 @@ require(readr)
 #     GRID      = GRID,
 #     N_grid    = length(unique(GRID))
 #   ))
-#   
+# 
 # }
 # 
 # 
 # make_INLA_data <- function(tags){
-#   
-#   z <- tags$ZEROONE                   
+# 
+#   z <- tags$ZEROONE
 #   y <- tags$IMEAN
-#   
-#   COVz <- tags$COVS 
+# 
+#   COVz <- tags$COVS
 #   colnames(COVz) <- paste0(colnames(COVz),'.z')
-#   stk.z <- inla.stack(tag='est.z', 
-#                       data=list(y=cbind(z, NA)), ### z at first column of y 
-#                       A=list(1,1,1,1,1,1,1), 
-#                       effects=list( list(grid.z=as.numeric(as.factor(paste(tags$ISLAND,tags$GRID)))), 
-#                                     list(Island=tags$ISLAND), 
-#                                     list(Island.z=tags$ISLAND), 
-#                                     list(Island.z.c1=tags$ISLAND), 
-#                                     list(Island.z.c2=tags$ISLAND),  
-#                                     list(Group.z=tags$GROUP), 
+#   stk.z <- inla.stack(tag='est.z',
+#                       data=list(y=cbind(z, NA)), ### z at first column of y
+#                       A=list(1,1,1,1,1,1,1),
+#                       effects=list( list(grid.z=as.numeric(as.factor(paste(tags$ISLAND,tags$GRID)))),
+#                                     list(Island=tags$ISLAND),
+#                                     list(Island.z=tags$ISLAND),
+#                                     list(Island.z.c1=tags$ISLAND),
+#                                     list(Island.z.c2=tags$ISLAND),
+#                                     list(Group.z=tags$GROUP),
 #                                     list(z.b0=rep(1,length(z)),
 #                                          TED_SUMS.z=COVz[,1],
 #                                          SURF_SUMS.z=COVz[,2])))
-#   
-#   COVy <- tags$COVS 
+# 
+#   COVy <- tags$COVS
 #   colnames(COVy) <- paste0(colnames(COVy),'.y')
-#   
-#   nbs <- tags$W_sparse
-#   g <- INLA:::inla.read.graph(as.matrix(Matrix::sparseMatrix(i=nbs[,1],j=nbs[,2],x=1,symmetric=TRUE,check = F)))
-#   
-#   stk.y <- inla.stack(tag='est.y', 
-#                       data=list(y=cbind(NA, y)), ### at second column 
-#                       A=list(1,1,1,1,1,1,1), 
-#                       effects=list( list(grid.y=as.numeric(as.factor(paste(tags$ISLAND,tags$GRID)))), 
-#                                     list(Island=tags$ISLAND), 
+# 
+#     stk.y <- inla.stack(tag='est.y',
+#                       data=list(y=cbind(NA, y)), ### at second column
+#                       A=list(1,1,1,1,1,1,1),
+#                       effects=list( list(grid.y=as.numeric(as.factor(paste(tags$ISLAND,tags$GRID)))),
+#                                     list(Island=tags$ISLAND),
 #                                     list(Island.y=tags$ISLAND),
-#                                     list(Island.y.c1=tags$ISLAND), 
-#                                     list(Island.y.c2=tags$ISLAND), 
-#                                     list(Group.y=tags$GROUP), 
+#                                     list(Island.y.c1=tags$ISLAND),
+#                                     list(Island.y.c2=tags$ISLAND),
+#                                     list(Group.y=tags$GROUP),
 #                                     list(y.b0=rep(1,length(y)),
 #                                          TED_SUMS.y=COVy[,1],
 #                                          SURF_SUMS.y=COVy[,2])))
-#   
-#   
-#   inla.stack(stk.z, stk.y) 
+# 
+# 
+#   inla.stack(stk.z, stk.y)
 # }
 # 
-
-form <- y ~ 0 + z.b0 + y.b0 + 
-  f(Island.y.c1,TED_SUMS.y,model='iid',
-    hyper=list(theta=list(prior="loggamma",param=c(1,0.001)))) + 
-  f(Island.z.c1,copy='Island.y.c1') + 
-  
-  f(Island.y.c2,SURF_SUMS.y,model='iid',
-    hyper=list(theta=list(prior="loggamma",param=c(1,0.001)))) +  
-  f(Island.z.c2,copy='Island.y.c2') +  
-  
-  f(Island.y,model='iid',
-    hyper=list(theta=list(prior="loggamma",param=c(1,0.001)))) +  
-  f(Island.z,copy='Island.y') +  
-  
-  f(grid.y, model='bym', graph=g,scale.model =T,control.group=list(model="exchangeable")) +
-  f(grid.z, copy='grid.y')
 # 
 # cdata <- read_csv('./model/data/ENTIRE_CLIMATOLOGY_ALL_ISLANDS.csv')
 # rdata <- read_csv('./model/data/RAW_BENTHIC_ALL_ISLANDS.csv')
@@ -183,9 +180,11 @@ form <- y ~ 0 + z.b0 + y.b0 +
 # all_data <- inner_join(rdata,cdata)
 # 
 # tags <- get_vars(all_data,'MACRO')
+# nbs <- tags$W_sparse
+# g <- INLA:::inla.read.graph(as.matrix(Matrix::sparseMatrix(i=nbs[,1],j=nbs[,2],x=1,symmetric=TRUE,check = F)))
 # 
 # stk <- make_INLA_data(tags)
-# save(stk,file='stk_macro.Rdata')
+# save(stk,g,file='stk_macro.Rdata')
 
 load('stk_macro.Rdata')
 res.yz <- inla(form, 
@@ -198,10 +197,12 @@ save(res.yz,file='INLA_resyz_MACRO.Rdata')
 
 # 
 # tags <- get_vars(all_data,'CCA')
+# nbs <- tags$W_sparse
+# g <- INLA:::inla.read.graph(as.matrix(Matrix::sparseMatrix(i=nbs[,1],j=nbs[,2],x=1,symmetric=TRUE,check = F)))
 # 
 # stk <- make_INLA_data(tags)
 # 
-# save(stk,file='stk_CCA.Rdata')
+# save(stk,g,file='stk_CCA.Rdata')
 
 load('stk_CCA.Rdata')
 
@@ -212,13 +213,15 @@ res.yz <- inla(form,
 ) 
 
 save(res.yz,file='INLA_resyz_CCA.Rdata')          
-# 
+
 # 
 # tags <- get_vars(all_data,'CORAL')
+# nbs <- tags$W_sparse
+# g <- INLA:::inla.read.graph(as.matrix(Matrix::sparseMatrix(i=nbs[,1],j=nbs[,2],x=1,symmetric=TRUE,check = F)))
 # 
 # stk <- make_INLA_data(tags)
 # 
-# save(stk,file='stk_coral.Rdata')
+# save(stk,g,file='stk_coral.Rdata')
 
 load('stk_coral.Rdata')
 
