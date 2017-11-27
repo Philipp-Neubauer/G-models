@@ -1,0 +1,365 @@
+---
+title: "Reef Substrate model results - INLA models on bearings"
+author: "Philipp Neubauer"
+date: "October 17, 2017"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE,echo=F}
+knitr::opts_chunk$set(echo = F,cache = T,autodep = T)
+require(readr)
+require(dplyr)
+require(cowplot)
+require(INLA)
+require(purrr)
+
+```
+
+
+# Coral
+
+## Coral model summary
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+cdata <- read_csv('./model/data/Summary_Data_All_Bearings_Bayes.csv') %>% filter(species=="CORAL")
+
+cdata$Island <- as.numeric(as.factor(cdata$island))
+cdata$island_IWP <- cdata$Island
+cdata$island_TED <- cdata$Island
+cdata$island_INT <- cdata$Island
+
+logit <- function(p) log(p/(1-p))
+
+cdata$IWP <- scale(cdata$mean_iwp)[,1]
+cdata$TED <- scale(cdata$mean_ted)[,1]
+cdata$INT <- scale(cdata$mean_ted*cdata$mean_iwp)[,1]
+cdata$mean_species <- cdata$mean_species/100
+#cdata$mean_species <- logit(cdata$mean_species)
+cdata$std_species <- cdata$std_species/100
+cdata$bearing <- as.numeric(as.factor(cdata$BEARING))
+```
+
+```{r echo=T}
+res <- inla(mean_species ~  IWP + TED + INT + 
+                 f(island_IWP,IWP,model='iid',
+                   hyper=list(theta=list(prior="loggamma",param=c(1,0.001)))) + 
+                 f(island_TED,TED,model='iid',
+                   hyper=list(theta=list(prior="loggamma",param=c(1,0.001))))  + 
+                 f(island_INT,INT,model='iid',
+                hyper=list(theta=list(prior="loggamma",param=c(1,0.001))))  + 
+                 
+                 f(island,model='iid',
+                   hyper=list(theta=list(prior="loggamma",param=c(1,0.001))))  + 
+                 f(group,model='iid',
+                   hyper=list(theta=list(prior="loggamma",param=c(1,0.001))))  +
+               f(bearing, model='rw1',
+                 cyclic=T,
+                 group = Island,
+                 control.group=list(model="exchangeable"),
+                 scale.model = TRUE,
+                 hyper = list(theta = list(prior="pc.prec",
+                                           param=c(1,0.001)))),
+               family='beta',
+            control.predictor = list(compute=T),
+               data=cdata)
+
+summary(res)
+
+```
+
+## Coral model fit
+```{r fig.align='center',fig.cap='Model fit from spatial model for Coral',fig.height=12,fig.width=8}
+ry <- res$summary.fitted.values$mode-cdata$mean_species
+rys <- data.frame(Bearing = cdata$BEARING,
+                  Residual = ry,
+                  Predicted = res$summary.fitted.values$mode,
+                  Predicted_low = res$summary.fitted.values$`0.025quant`,
+                  Predicted_high = res$summary.fitted.values$`0.975quant`,
+                  Observed = cdata$mean_species,
+                  i=cdata$island)
+
+ggplot(rys,aes(x=Observed,y=Predicted)) + 
+  geom_line() + 
+  geom_ribbon(aes(ymin=Predicted_low,ymax=Predicted_high),alpha=0.2,col='skyblue') +
+  facet_wrap(~as.factor(i),scales='free',ncol=5)
+```
+
+```{r fig.align='center',fig.cap='Model fit from spatial model for Coral by bearing, data in black, predictions in blue',fig.height=12,fig.width=8}  
+  
+ggplot(rys,aes(x=Bearing,y=Predicted)) + 
+  geom_line(col='skyblue') + 
+  geom_ribbon(aes(ymin=Predicted_low,ymax=Predicted_high),alpha=0.2,col='skyblue')+
+  geom_line(aes(x=Bearing,y=Observed)) +
+  facet_wrap(~as.factor(i),scales='free',ncol=5)
+```
+
+## Coral residuals
+```{r fig.align='center',fig.cap='Residuals from spatial model for Coral',fig.height=12,fig.width=8}
+ggplot(rys) + 
+  geom_line(aes(x=Bearing,y=Residual)) + 
+  facet_wrap(~as.factor(i),scales='free',ncol=5)
+```
+
+```{r fig.align='center',fig.cap='Spatial auto-correlation in residuals from spatial model for Coral',fig.height=12,fig.width=8}
+acc <- rys %>% split(.$i) %>% map(~acf(.$Residual,plot=F,type='cov',max.lag=36)) %>% map(~with(.,data.frame(lag,acf))) %>% bind_rows(.id='Island')
+ggplot(acc) +
+  geom_line(aes(x=lag,y=acf)) + 
+  facet_wrap(~Island,scales='free',ncol=5)
+```
+
+## Coral - by island effects
+
+```{r fig.align='center',fig.cap='Estimated deviation of individual island regression slopes from over-all trend for Coral',fig.height=12,fig.width=8}
+iwp <- res$summary.random$island_IWP
+ted <- res$summary.random$island_TED
+iwpxted <- res$summary.random$island_INT
+
+beat <- data.frame(bind_rows(list(iwp=iwp,ted=ted,int=iwpxted),.id = 'Var'))
+beat[,2] <- sort(unique(cdata$island))
+beat$humans <- as.logical(tapply(cdata$population_status,cdata$island,unique))
+colnames(beat)[[2]] <- 'Island'
+
+ggplot(beat) +
+  geom_pointrange(aes(x=Var,y=X0.5quant,ymin=X0.025quant,ymax=X0.975quant,col=as.factor(humans))) +
+  geom_hline(aes(yintercept=0)) +
+  facet_wrap(~Island,ncol = 5) + 
+  scale_color_discrete('Human presence') +
+  theme_cowplot() +
+  geom_vline(aes(xintercept=0), linetype=2, alpha=0.4)+
+  ylab('Effect size') +
+  xlab('Effect')
+```
+
+# CCA
+
+## CCA model summary
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+cdata <- read_csv('./model/data/Summary_Data_All_Bearings_Bayes.csv') %>% filter(species=="CCA")
+
+cdata$Island <- as.numeric(as.factor(cdata$island))
+cdata$island_IWP <- cdata$Island
+cdata$island_TED <- cdata$Island
+cdata$island_INT <- cdata$Island
+
+logit <- function(p) log(p/(1-p))
+
+cdata$IWP <- scale(cdata$mean_iwp)[,1]
+cdata$TED <- scale(cdata$mean_ted)[,1]
+cdata$INT <- scale(cdata$mean_ted*cdata$mean_iwp)[,1]
+cdata$mean_species <- cdata$mean_species/100
+#cdata$mean_species <- logit(cdata$mean_species)
+cdata$std_species <- cdata$std_species/100
+cdata$bearing <- as.numeric(as.factor(cdata$BEARING))
+inla.setOption(enable.inla.argument.weights=T)
+```
+
+```{r echo=F}
+res <- inla(mean_species ~ IWP + TED + INT + 
+                 f(island_IWP,IWP,model='iid',
+                   hyper=list(theta=list(prior="loggamma",param=c(1,0.001)))) + 
+                 f(island_TED,TED,model='iid',
+                   hyper=list(theta=list(prior="loggamma",param=c(1,0.001))))  + 
+                 f(island_INT,INT,model='iid',
+                hyper=list(theta=list(prior="loggamma",param=c(1,0.001))))  + 
+                 
+                 f(island,model='iid',
+                   hyper=list(theta=list(prior="loggamma",param=c(1,0.001))))  + 
+                 f(group,model='iid',
+                   hyper=list(theta=list(prior="loggamma",param=c(1,0.001))))  +
+               f(bearing, model='rw1',
+                 cyclic=T,
+                 group = Island,
+                 control.group=list(model="exchangeable"),
+                 scale.model = TRUE,
+                 hyper = list(theta = list(prior="pc.prec",
+                                           param=c(1,0.001)))),
+               family='beta',
+            control.predictor = list(compute=T),
+               data=cdata)
+
+summary(res)
+
+```
+
+
+## CCA model fit
+```{r fig.align='center',fig.cap='Model fit from spatial model for CCA',fig.height=12,fig.width=8}
+ry <- res$summary.fitted.values$mode-cdata$mean_species
+rys <- data.frame(Bearing = cdata$BEARING,
+                  Residual = ry,
+                  Predicted = res$summary.fitted.values$mode,
+                  Predicted_low = res$summary.fitted.values$`0.025quant`,
+                  Predicted_high = res$summary.fitted.values$`0.975quant`,
+                  Observed = cdata$mean_species,
+                  i=cdata$island)
+
+ggplot(rys,aes(x=Observed,y=Predicted)) + 
+  geom_line() + 
+  geom_ribbon(aes(ymin=Predicted_low,ymax=Predicted_high),alpha=0.2,col='skyblue') +
+  facet_wrap(~as.factor(i),scales='free',ncol=5)
+```
+
+```{r fig.align='center',fig.cap='Model fit from spatial model for CCA by bearing, data in black, predictions in blue',fig.height=12,fig.width=8}  
+  
+ggplot(rys,aes(x=Bearing,y=Predicted)) + 
+  geom_line(col='skyblue') + 
+  geom_ribbon(aes(ymin=Predicted_low,ymax=Predicted_high),alpha=0.2,col='skyblue')+
+  geom_line(aes(x=Bearing,y=Observed)) +
+  facet_wrap(~as.factor(i),scales='free',ncol=5)
+```
+
+## CCA residuals
+```{r fig.align='center',fig.cap='Residuals from spatial model for CCA',fig.height=12,fig.width=8}
+ggplot(rys) + 
+  geom_line(aes(x=Bearing,y=Residual)) + 
+  facet_wrap(~as.factor(i),scales='free',ncol=5)
+```
+
+```{r fig.align='center',fig.cap='Spatial auto-correlation in residuals from spatial model for CCA',fig.height=12,fig.width=8}
+acc <- rys %>% split(.$i) %>% map(~acf(.$Residual,plot=F,type='cov',max.lag=36)) %>% map(~with(.,data.frame(lag,acf))) %>% bind_rows(.id='Island')
+ggplot(acc) +
+  geom_line(aes(x=lag,y=acf)) + 
+  facet_wrap(~Island,scales='free',ncol=5)
+```
+
+## CCA - by island effects
+
+```{r fig.align='center',fig.cap='Estimated deviation of individual island regression slopes from over-all trend for CCA',fig.height=12,fig.width=8}
+iwp <- res$summary.random$island_IWP
+ted <- res$summary.random$island_TED
+iwpxted <- res$summary.random$island_INT
+
+beat <- data.frame(bind_rows(list(iwp=iwp,ted=ted,int=iwpxted),.id = 'Var'))
+beat[,2] <- sort(unique(cdata$island))
+beat$humans <- as.logical(tapply(cdata$population_status,cdata$island,unique))
+colnames(beat)[[2]] <- 'Island'
+
+ggplot(beat) +
+  geom_pointrange(aes(x=Var,y=X0.5quant,ymin=X0.025quant,ymax=X0.975quant,col=as.factor(humans))) +
+  geom_hline(aes(yintercept=0)) +
+  facet_wrap(~Island,ncol = 5) + 
+  theme_cowplot() +
+  scale_color_discrete('Human presence') +
+  geom_vline(aes(xintercept=0), linetype=2, alpha=0.4)+
+  ylab('Effect size') +
+  xlab('Effect')
+```
+
+# Macroalgae
+
+## Macroalgae model summary
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+cdata <- read_csv('./model/data/Summary_Data_All_Bearings_Bayes.csv') %>% filter(species=="MACROALGAE")
+
+cdata$Island <- as.numeric(as.factor(cdata$island))
+cdata$island_IWP <- cdata$Island
+cdata$island_TED <- cdata$Island
+cdata$island_INT <- cdata$Island
+
+logit <- function(p) log(p/(1-p))
+
+cdata$IWP <- scale(cdata$mean_iwp)[,1]
+cdata$TED <- scale(cdata$mean_ted)[,1]
+cdata$INT <- scale(cdata$mean_ted*cdata$mean_iwp)[,1]
+cdata$mean_species <- cdata$mean_species/100
+cdata$std_species <- cdata$std_species/100
+cdata$bearing <- as.numeric(as.factor(cdata$BEARING))
+inla.setOption(enable.inla.argument.weights=T)
+```
+
+```{r}
+res <- inla(mean_species ~ IWP + TED + INT + 
+                 f(island_IWP,IWP,model='iid',
+                   hyper=list(theta=list(prior="loggamma",param=c(1,0.001)))) + 
+                 f(island_TED,TED,model='iid',
+                   hyper=list(theta=list(prior="loggamma",param=c(1,0.001))))  + 
+                 f(island_INT,INT,model='iid',
+                hyper=list(theta=list(prior="loggamma",param=c(1,0.001))))  + 
+                 
+                 f(island,model='iid',
+                   hyper=list(theta=list(prior="loggamma",param=c(1,0.001))))  + 
+                 f(group,model='iid',
+                   hyper=list(theta=list(prior="loggamma",param=c(1,0.001))))  + 
+               f(bearing, model='rw1',
+                 cyclic=T,
+                 group = Island,
+                 control.group=list(model="exchangeable"),
+                 scale.model = TRUE,
+                 hyper = list(theta = list(prior="pc.prec",
+                                           param=c(1,0.001)))),
+               family='beta',
+            control.predictor = list(compute=T),
+               data=cdata)
+
+summary(res)
+
+```
+
+## Macroalgae model fit
+```{r fig.align='center',fig.cap='Model fit from spatial model for Macroalgae',fig.height=12,fig.width=8}
+ry <- res$summary.fitted.values$mode-cdata$mean_species
+rys <- data.frame(Bearing = cdata$BEARING,
+                  Residual = ry,
+                  Predicted = res$summary.fitted.values$mode,
+                  Predicted_low = res$summary.fitted.values$`0.025quant`,
+                  Predicted_high = res$summary.fitted.values$`0.975quant`,
+                  Observed = cdata$mean_species,
+                  i=cdata$island)
+
+ggplot(rys,aes(x=Observed,y=Predicted)) + 
+  geom_line() + 
+  geom_ribbon(aes(ymin=Predicted_low,ymax=Predicted_high),alpha=0.2,col='skyblue') +
+  facet_wrap(~as.factor(i),scales='free',ncol=5)
+```
+
+```{r fig.align='center',fig.cap='Model fit from spatial model for Macroalgae by bearing, data in black, predictions in blue',fig.height=12,fig.width=8}  
+  
+ggplot(rys,aes(x=Bearing,y=Predicted)) + 
+  geom_line(col='skyblue') + 
+  geom_ribbon(aes(ymin=Predicted_low,ymax=Predicted_high),alpha=0.2,col='skyblue')+
+  geom_line(aes(x=Bearing,y=Observed)) +
+  facet_wrap(~as.factor(i),scales='free',ncol=5)
+```
+
+## Macroalgae residuals
+```{r fig.align='center',fig.cap='Residuals from spatial model for Macroalgae',fig.height=12,fig.width=8}
+ggplot(rys) + 
+  geom_line(aes(x=Bearing,y=Residual)) + 
+  facet_wrap(~as.factor(i),scales='free',ncol=5)
+```
+
+```{r fig.align='center',fig.cap='Spatial auto-correlation in residuals from spatial model for Macroalgae',fig.height=12,fig.width=8}
+acc <- rys %>% split(.$i) %>% map(~acf(.$Residual,plot=F,type='cov',max.lag=36)) %>% map(~with(.,data.frame(lag,acf))) %>% bind_rows(.id='Island')
+ggplot(acc) +
+  geom_line(aes(x=lag,y=acf)) + 
+  facet_wrap(~Island,scales='free',ncol=5)
+```
+
+## Macroalgae - by island effects
+
+```{r fig.align='center',fig.cap='Estimated deviation of individual island regression slopes from over-all trend for Macroalgae',fig.height=12,fig.width=8}
+iwp <- res$summary.random$island_IWP
+ted <- res$summary.random$island_TED
+iwpxted <- res$summary.random$island_INT
+
+beat <- data.frame(bind_rows(list(iwp=iwp,ted=ted,int=iwpxted),.id = 'Var'))
+beat[,2] <- sort(unique(cdata$island))
+beat$humans <- as.logical(tapply(cdata$population_status,cdata$island,unique))
+colnames(beat)[[2]] <- 'Island'
+
+ggplot(beat) +
+  geom_pointrange(aes(x=Var,y=X0.5quant,ymin=X0.025quant,ymax=X0.975quant,col=as.factor(humans))) +
+  geom_hline(aes(yintercept=0)) +
+  facet_wrap(~Island,ncol = 5) + 
+  theme_cowplot() +
+  scale_color_discrete('Human presence') +
+  geom_vline(aes(xintercept=0), linetype=2, alpha=0.4)+
+  ylab('Effect size') +
+  xlab('Effect')
+```

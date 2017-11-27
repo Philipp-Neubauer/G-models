@@ -1,7 +1,10 @@
 #!/bin/bash
 
 set -ex
-Rscript reef-forcing_QR_grid_beta_raw_h.r
+Rscript -e "rmarkdown::render('MS_results_INLA_wint.Rmd')"
+Rscript -e "rmarkdown::render('MS_results_INLA.Rmd')"
+Rscript INLA_version.R
 
 cp *.Rdata /output/
 cp *.pdf /output/
+cp *.html /output/
