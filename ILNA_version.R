@@ -4,20 +4,26 @@ require(readr)
 
 
 form <- y ~ 0 + z.b0 + y.b0 + 
-  f(Island.y.c1,TED_SUMS.y,model='iid',
+  TED_SUMS.y + SURF_SUMS.y + INT_SUMS.y + 
+  TED_SUMS.z + SURF_SUMS.z + INT_SUMS.z + 
+  f(Island.y.c1,TED_SUMS.y.bI,model='iid',
     hyper=list(theta=list(prior="loggamma",param=c(1,0.001)))) + 
   f(Island.z.c1,copy='Island.y.c1') + 
   
-  f(Island.y.c2,SURF_SUMS.y,model='iid',
+  f(Island.y.c2,SURF_SUMS.y.bI,model='iid',
     hyper=list(theta=list(prior="loggamma",param=c(1,0.001)))) +  
   f(Island.z.c2,copy='Island.y.c2') +  
+  
+  f(Island.y.c3,INT_SUMS.y.bI,model='iid',
+    hyper=list(theta=list(prior="loggamma",param=c(1,0.001)))) +  
+  f(Island.z.c3,copy='Island.y.c3') + 
   
   f(Island.y,model='iid',
     hyper=list(theta=list(prior="loggamma",param=c(1,0.001)))) +  
   f(Island.z,copy='Island.y') +  
   
-  f(grid.y, model='bym', graph=g,scale.model =T,control.group=list(model="exchangeable")) +
-  f(grid.z, copy='grid.y')
+  f(grid.y, model='rw1',cyclic=T,scale.model = T, group=Island.gy,control.group=list(model="exchangeable")) +
+  f(grid.z, copy='grid.y', group=Island.gz)
 
 # 
 # get_vars <- function(data,var){
@@ -97,7 +103,11 @@ form <- y ~ 0 + z.b0 + y.b0 +
 # 
 #   require(Matrix)
 # 
-#   COVS <- with(adata, as.matrix(
+#   COVS <- with(adata, as.matrix(res.yz <- inla(form, 
+#                                                family=c('binomial', 'beta'), 
+#                                                data=inla.stack.data(stk),
+#                                                control.predictor=list(quantiles = c(0.025,0.25,0.5,0.75,0.975),                                               A=inla.stack.A(stk))
+#                                                
 #     data.frame(TED_SUMS,
 #                SURF_SUMS,
 #                PHYS_INT
@@ -142,32 +152,42 @@ form <- y ~ 0 + z.b0 + y.b0 +
 #   colnames(COVz) <- paste0(colnames(COVz),'.z')
 #   stk.z <- inla.stack(tag='est.z',
 #                       data=list(y=cbind(z, NA)), ### z at first column of y
-#                       A=list(1,1,1,1,1,1,1),
-#                       effects=list( list(grid.z=as.numeric(as.factor(paste(tags$ISLAND,tags$GRID)))),
-#                                     list(Island=tags$ISLAND),
-#                                     list(Island.z=tags$ISLAND),
-#                                     list(Island.z.c1=tags$ISLAND),
-#                                     list(Island.z.c2=tags$ISLAND),
-#                                     list(Group.z=tags$GROUP),
-#                                     list(z.b0=rep(1,length(z)),
+#                       A=list(1),
+#                       effects=list( list(grid.z=tags$GRID,
+#                                          Island.gz=tags$ISLAND,
+#                                          Island.z=tags$ISLAND,
+#                                          Island.z.c1=tags$ISLAND,
+#                                          Island.z.c2=tags$ISLAND,
+#                                          Island.z.c3=tags$ISLAND,
+#                                          Group.z=tags$GROUP,
+#                                          z.b0=rep(1,length(z)),
 #                                          TED_SUMS.z=COVz[,1],
-#                                          SURF_SUMS.z=COVz[,2])))
+#                                          SURF_SUMS.z=COVz[,2],
+#                                          INT_SUMS.z=COVz[,3],
+#                                          TED_SUMS.z.bI=COVz[,1],
+#                                          SURF_SUMS.z.bI=COVz[,2],
+#                                          INT_SUMS.z.bI=COVz[,3])))
 # 
 #   COVy <- tags$COVS
 #   colnames(COVy) <- paste0(colnames(COVy),'.y')
 # 
 #     stk.y <- inla.stack(tag='est.y',
 #                       data=list(y=cbind(NA, y)), ### at second column
-#                       A=list(1,1,1,1,1,1,1),
-#                       effects=list( list(grid.y=as.numeric(as.factor(paste(tags$ISLAND,tags$GRID)))),
-#                                     list(Island=tags$ISLAND),
-#                                     list(Island.y=tags$ISLAND),
-#                                     list(Island.y.c1=tags$ISLAND),
-#                                     list(Island.y.c2=tags$ISLAND),
-#                                     list(Group.y=tags$GROUP),
-#                                     list(y.b0=rep(1,length(y)),
+#                       A=list(1),
+#                       effects=list( list(grid.y=tags$GRID,
+#                                          Island.gy=tags$ISLAND,
+#                                          Island.y=tags$ISLAND,
+#                                          Island.y.c1=tags$ISLAND,
+#                                          Island.y.c2=tags$ISLAND,
+#                                          Island.y.c3=tags$ISLAND,
+#                                          Group.y=tags$GROUP,
+#                                          y.b0=rep(1,length(y)),
 #                                          TED_SUMS.y=COVy[,1],
-#                                          SURF_SUMS.y=COVy[,2])))
+#                                          SURF_SUMS.y=COVy[,2],
+#                                          INT_SUMS.y=COVy[,3],
+#                                          TED_SUMS.y.bI=COVy[,1],
+#                                          SURF_SUMS.y.bI=COVy[,2],
+#                                          INT_SUMS.y.bI=COVy[,3])))
 # 
 # 
 #   inla.stack(stk.z, stk.y)
@@ -195,7 +215,7 @@ res.yz <- inla(form,
 
 save(res.yz,file='INLA_resyz_MACRO.Rdata')        
 
-# 
+
 # tags <- get_vars(all_data,'CCA')
 # nbs <- tags$W_sparse
 # g <- INLA:::inla.read.graph(as.matrix(Matrix::sparseMatrix(i=nbs[,1],j=nbs[,2],x=1,symmetric=TRUE,check = F)))
