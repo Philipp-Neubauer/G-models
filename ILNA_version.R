@@ -210,7 +210,9 @@ load('stk_macro.Rdata')
 res.yz <- inla(form, 
                family=c('binomial', 'beta'), 
                data=inla.stack.data(stk),
-               control.predictor=list(quantiles = c(0.025,0.25,0.5,0.75,0.975),                                               A=inla.stack.A(stk))
+               control.inla=list(diagonal = 1,strategy='gaussian',int.strategy='eb'),
+               control.predictor=list(quantiles = c(0.025,0.25,0.5,0.75,0.975),                                               A=inla.stack.A(stk)),
+               verbose = T
 ) 
 
 save(res.yz,file='INLA_resyz_MACRO.Rdata')        
@@ -229,6 +231,8 @@ load('stk_CCA.Rdata')
 res.yz <- inla(form, 
                family=c('binomial', 'beta'), 
                data=inla.stack.data(stk),
+               control.inla=list(diagonal = 1,strategy='gaussian',int.strategy='eb'),
+               verbose = T,
                control.predictor=list(quantiles = c(0.025,0.25,0.5,0.75,0.975),                                               A=inla.stack.A(stk))
 ) 
 
@@ -248,6 +252,8 @@ load('stk_coral.Rdata')
 res.yz <- inla(form, 
                family=c('binomial', 'beta'), 
                data=inla.stack.data(stk),
+               control.inla=list(diagonal = 1,strategy='gaussian',int.strategy='eb'),
+               verbose = T,
                control.predictor=list(quantiles = c(0.025,0.25,0.5,0.75,0.975),                                               A=inla.stack.A(stk))
 ) 
 
