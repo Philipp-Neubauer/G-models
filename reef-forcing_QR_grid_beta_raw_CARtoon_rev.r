@@ -3,7 +3,7 @@ require(dplyr)
 require(cowplot)
 require(rstan)
 rstan_options(auto_write = TRUE)
-options(mc.cores = 8)
+options(mc.cores = 3)
 
 
 # get_vars <- function(data,var){
@@ -141,9 +141,9 @@ options(mc.cores = 8)
 
 
 load('CAR_macro_rev.Rdata')
-fit_MARtoon_rev <- stan('model_QR_grid_beta_raw_CARtoon_ind.stan',
+fit_MARtoon_rev <- stan('model_QR_grid_beta_raw_CARtoon_rev.stan',
                                data = model_data,
-                               iter = 900,
+                               iter = 1000,
                                chains = 3,
                                thin = 2,
                                warmup = 500,
@@ -154,18 +154,23 @@ fit_MARtoon_rev <- stan('model_QR_grid_beta_raw_CARtoon_ind.stan',
                                         'rho',
                                         'resid_y',
                                         'beta',
+                                        't_mean',
+                                        't_var',
+                                        'rho_mean',
+                                        'rho_prec',
                                         'iscale',
                                         'scale',
                                         'log_lik',
                                         'omean',
                                         'zmean'),
-                               control = list(max_treedepth = 10, adapt_delta=0.8),
+                               control = list(max_treedepth = 13, adapt_delta=0.8),
                                verbose = T)
 
-save(fit_MARtoon_rev,file='CARtoonfit_raw_macroalgae_ind.Rdata')
+save(fit_MARtoon_rev,file='CARtoonfit_raw_macroalgae_hhCAR.Rdata')
 # 
 gg <- stan_trace(fit_MARtoon_rev,
-          pars=c('omean','rho[1]','rho[10]','beta[27,2]','lp__','scale','zmean','island_sig','group_sig'),
+          pars=c('omean','rho_prec','rho[10]','grid_sig[10]','beta[1,1]',
+                 't_var','t_mean','lp__','scale','zmean','island_sig','group_sig'),
           #pars=c('rho_prec'),
           include=T)
 ggsave(gg,file='traces.pdf')
@@ -192,15 +197,15 @@ ggsave(gg,file='betas.pdf')
 
 
 # # 
-logit <- function(p) log(p/(1-p))
-ry <- get_posterior_mean(fit_MARtoon_rev,pars='resid_y')[,1]
-rys <- data.frame(g = model_data$GRID[model_data$ii_notzero],ry,i=model_data$ISLAND[model_data$ii_notzero],imean=logit(model_data$IMEAN))
-#ggplot(rys) + geom_line(aes(x=g,y=ry)) + facet_wrap(~as.factor(i),scales='free')
-
-require(purrr)
-acc <- rys %>% arrange(i,g) %>% split(.$i) %>% map(~acf(.$ry,plot=F,type='cov',lag.max = 300)) %>% map(~with(.,data.frame(lag,acf))) %>% bind_rows(.id='Island')
-gg <- ggplot(acc) + geom_line(aes(x=lag,y=acf)) + facet_wrap(~Island,scales='free')
-ggsave(gg,file='spatial.pdf')
+# logit <- function(p) log(p/(1-p))
+# ry <- get_posterior_mean(fit_MARtoon_rev,pars='resid_y')[,1]
+# rys <- data.frame(g = model_data$GRID[model_data$ii_notzero],ry,i=model_data$ISLAND[model_data$ii_notzero],imean=logit(model_data$IMEAN))
+# #ggplot(rys) + geom_line(aes(x=g,y=ry)) + facet_wrap(~as.factor(i),scales='free')
+# 
+# require(purrr)
+# acc <- rys %>% arrange(i,g) %>% split(.$i) %>% map(~acf(.$ry,plot=F,type='cov',lag.max = 300)) %>% map(~with(.,data.frame(lag,acf))) %>% bind_rows(.id='Island')
+# gg <- ggplot(acc) + geom_line(aes(x=lag,y=acf)) + facet_wrap(~Island,scales='free')
+# ggsave(gg,file='spatial.pdf')
 
 ## CCA
 

@@ -70,16 +70,14 @@ transformed data {
 parameters {
   vector[N_islands] island_fx;
   vector<lower=0>[N_islands] iscale;
-  real<lower=0> gscale;
-  real<lower=0> gmscale;
+  //real<lower=0> gscale;
+  //real<lower=0> gmscale;
   //real<lower=0> vscale;
   real<lower=0> scale;
   vector[N_groups] group_fx;
   real<lower=0> island_sig;
   real<lower=0> group_sig;
-  vector<lower=0>[N_islands] grid_sig;
-  real<lower=0> grid_var;
-  real<lower=0> grid_mean;
+  real<lower=0> grid_sig;
   vector[N_grid] grid_fx;
   real<lower=0, upper=1> rho[N_islands]; 
   real<lower=0, upper=1> rho_mean; 
@@ -96,11 +94,11 @@ transformed parameters{
  vector<lower=0>[N_notzero] a;
  vector<lower=0>[N_notzero] b;
   
- imean = rows_dot_product(Q_ast,theta[ISLAND,1:K])+ island_sig*island_fx[ISLAND]+group_sig*group_fx[GROUP]+ grid_sig[ISLAND].*grid_fx[GRID];
+ imean = rows_dot_product(Q_ast,theta[ISLAND,1:K])+ island_sig*island_fx[ISLAND]+group_sig*group_fx[GROUP]+ grid_sig*grid_fx[GRID];
 
  mu = inv_logit(omean+imean[ii_notzero]);
- a  =    mu  .* iscale[ISLAND[ii_notzero]];
- b  = (1-mu) .* iscale[ISLAND[ii_notzero]];
+ a  =    mu  * iscale;//[ISLAND[ii_notzero]];
+ b  = (1-mu) * iscale;//[ISLAND[ii_notzero]];
  
 
 }
@@ -112,9 +110,9 @@ model {
   
  
     // model for within grid sd, hierarchical across islands
-  iscale ~ cauchy(gmscale,gscale);
-  gscale ~ cauchy(0,10);
-  gmscale ~ cauchy(0,10);
+  iscale ~ cauchy(0,5);
+  #gscale ~ cauchy(0,100);
+  #gmscale ~ cauchy(0,100);
   
   IMEAN ~ beta(a,b);
   
@@ -122,31 +120,31 @@ model {
   ZEROONE ~ bernoulli_logit(zmean+scale*imean[ii_zeroone]);
   
   //regression coeffs
-  omean ~ cauchy(0,5);
-  zmean ~ cauchy(0,5);
-  scale ~ cauchy(1,5);
+  omean ~ cauchy(0,10);
+  zmean ~ cauchy(0,10);
+  scale ~ cauchy(1,10);
   
   island_fx ~ normal(0,1);
   island_sig ~ cauchy(0,2);
   group_fx ~ normal(0,1);
   group_sig ~ cauchy(0,2);
-  grid_sig ~ cauchy(grid_mean,grid_var);
-  grid_mean ~ cauchy(0,2);
-  grid_var ~ cauchy(0,2);
-  t_mean ~ cauchy(0,5);
-  t_var ~ cauchy(0,5);
+  //grid_sig ~ cauchy(grid_mean,grid_var);
+  //grid_mean ~ normal(0,1);
+  grid_sig ~ cauchy(0,2);
+  t_mean ~ normal(0,1);
+  t_var ~ cauchy(0,2);
   
   pos=1;
   ppos=1;
   for (i in 1:N_islands) {
     segment(grid_fx,pos,grids[i]) ~ sparse_car(rho[i], segment(W_sparse,ppos,W_n[i]), segment(D_sparse,pos,grids[i]), segment(lambda,pos,grids[i]), grids[i], W_n[i]);
-    theta[i,1:K] ~ cauchy(t_mean,t_var);
+    theta[i,1:K] ~ normal(t_mean,t_var);
     pos = pos + grids[i];
     ppos = ppos + W_n[i];
   }
   
- rho_mean  ~ beta(1, 1);
- rho_prec  ~ cauchy(0,5);
+ rho_mean  ~ beta(2, 2);
+ rho_prec  ~ normal(0,1);
  a_r  = rho_mean  * rho_prec;
  b_r  = (1-rho_mean)  * rho_prec;
   
