@@ -69,7 +69,7 @@ transformed data {
 }
 parameters {
   vector[N_islands] island_fx;
-  vector<lower=0>[N_islands] iscale;
+  real<lower=0> iscale;
   //real<lower=0> gscale;
   //real<lower=0> gmscale;
   //real<lower=0> vscale;
