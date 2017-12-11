@@ -143,10 +143,10 @@ options(mc.cores = 3)
 load('CAR_macro_rev.Rdata')
 fit_MARtoon_rev <- stan('model_QR_grid_beta_raw_CARtoon_rev.stan',
                                data = model_data,
-                               iter = 1000,
-                               chains = 3,
-                               thin = 2,
-                               warmup = 500,
+                               iter = 2000,
+                               chains = 4,
+                               thin = 4,
+                               warmup = 1000,
                                init = function() list(rho=rep(0.95,model_data$N_islands)),
                                pars = c('island_sig',
                                         'group_sig',
@@ -167,32 +167,32 @@ fit_MARtoon_rev <- stan('model_QR_grid_beta_raw_CARtoon_rev.stan',
 
 save(fit_MARtoon_rev,file='CARtoonfit_raw_macroalgae_hhCAR.Rdata')
 # 
-gg <- stan_trace(fit_MARtoon_rev,
-          pars=c('omean','rho_prec','rho[10]','grid_sig[10]','beta[1,1]',
-                 't_var','t_mean','lp__','scale','zmean','island_sig','group_sig'),
-          #pars=c('rho_prec'),
-          include=T)
-ggsave(gg,file='traces.pdf')
+# gg <- stan_trace(fit_MARtoon_rev,
+#           pars=c('omean','rho_prec','rho[10]','grid_sig[10]','beta[1,1]',
+#                  't_var','t_mean','lp__','scale','zmean','island_sig','group_sig'),
+#           #pars=c('rho_prec'),
+#           include=T)
+# ggsave(gg,file='traces.pdf')
 
-
-beats <- extract(fit_MARtoon_rev,'beta')$beta
-
-dimnames(beats)[[3]] <- dimnames(model_data$COVS)[[2]]
-dimnames(beats)[[2]] <- unique(all_data$ISLAND)
-
-beat <- tbl_df(reshape2::melt(beats))
-colnames(beat)[2:3] <- c('Island','Covariate')
-
-gg <- ggplot(beat) +
-  geom_violin(aes(x=Covariate,y=value)) +
-  geom_hline(aes(yintercept=0)) +
-  facet_wrap(~Island) + 
-  theme_cowplot() +
-  geom_vline(aes(xintercept=0), linetype=2, alpha=0.4)+
-  xlab('Effect size') +
-  ylab('')
 # 
-ggsave(gg,file='betas.pdf')
+# beats <- extract(fit_MARtoon_rev,'beta')$beta
+# 
+# dimnames(beats)[[3]] <- dimnames(model_data$COVS)[[2]]
+# dimnames(beats)[[2]] <- unique(all_data$ISLAND)
+# 
+# beat <- tbl_df(reshape2::melt(beats))
+# colnames(beat)[2:3] <- c('Island','Covariate')
+# 
+# gg <- ggplot(beat) +
+#   geom_violin(aes(x=Covariate,y=value)) +
+#   geom_hline(aes(yintercept=0)) +
+#   facet_wrap(~Island) + 
+#   theme_cowplot() +
+#   geom_vline(aes(xintercept=0), linetype=2, alpha=0.4)+
+#   xlab('Effect size') +
+#   ylab('')
+# # 
+# ggsave(gg,file='betas.pdf')
 
 
 # # 
