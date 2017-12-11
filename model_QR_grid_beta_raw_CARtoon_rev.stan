@@ -105,8 +105,8 @@ transformed parameters{
 model {
   int pos;
   int ppos;
-  //real a_r;
-  //real b_r;
+  real a_r;
+  real b_r;
   
  
     // model for within grid sd, hierarchical across islands
@@ -143,12 +143,12 @@ model {
     ppos = ppos + W_n[i];
   }
   
- //rho_mean  ~ beta(2, 2);
- //rho_prec  ~ normal(0,1);
- //a_r  = rho_mean  * rho_prec;
- //b_r  = (1-rho_mean)  * rho_prec;
+ rho_mean  ~ beta(2, 2);
+ rho_prec  ~ normal(0,1);
+ a_r  = rho_mean  * rho_prec;
+ b_r  = (1-rho_mean)  * rho_prec;
   
- rho ~ beta(2, 2);
+ rho ~ beta(a_r, b_r);
   
 }
 generated quantities{
