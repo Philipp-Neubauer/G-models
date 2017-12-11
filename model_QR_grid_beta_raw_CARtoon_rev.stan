@@ -80,8 +80,8 @@ parameters {
   real<lower=0> grid_sig;
   vector[N_grid] grid_fx;
   real<lower=0, upper=1> rho[N_islands]; 
-  //real<lower=0, upper=1> rho_mean; 
-  //real<lower=0> rho_prec;  
+  real<lower=0, upper=1> rho_mean; 
+  real<lower=0> rho_prec;  
   real omean;
   real zmean;
   matrix[N_islands,K] theta;
