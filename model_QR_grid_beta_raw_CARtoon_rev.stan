@@ -80,8 +80,8 @@ parameters {
   real<lower=0> grid_sig;
   vector[N_grid] grid_fx;
   real<lower=0, upper=1> rho[N_islands]; 
-  real<lower=0, upper=1> rho_mean; 
-  real<lower=0> rho_prec;  
+  //real<lower=0, upper=1> rho_mean; 
+  //real<lower=0> rho_prec;  
   real omean;
   real zmean;
   matrix[N_islands,K] theta;
@@ -143,12 +143,12 @@ model {
     ppos = ppos + W_n[i];
   }
   
- rho_mean  ~ beta(2, 2);
- rho_prec  ~ normal(0,1);
- a_r  = rho_mean  * rho_prec;
- b_r  = (1-rho_mean)  * rho_prec;
-  
- rho ~ beta(a_r, b_r);
+ // rho_mean  ~ beta(2, 2);
+ // rho_prec  ~ normal(0,1);
+ // a_r  = rho_mean  * rho_prec;
+ // b_r  = (1-rho_mean)  * rho_prec;
+ //  
+ rho ~ beta(2, 2);
   
 }
 generated quantities{
