@@ -92,11 +92,13 @@ parameters {
 }
 transformed parameters{
  vector[N] imean;
+ vector[N] imeana;
  vector<lower=0>[N_notzero] mu;
  vector<lower=0>[N_notzero] a;
  vector<lower=0>[N_notzero] b;
   
- imean = rows_dot_product(Q_ast,theta[ISLAND,1:K])+ island_sig*island_fx[ISLAND]+group_sig*group_fx[GROUP]+ grid_sig*grid_fx[GRID];
+imeana = rows_dot_product(Q_ast,theta[ISLAND,1:K])+ island_sig*island_fx[ISLAND]+group_sig*group_fx[GROUP];
+ imean = imeana + grid_sig[ISLAND].*grid_fx[GRID];
 
  iscale = 1/iiscale
  mu = inv_logit(omean+imean[ii_notzero]);
