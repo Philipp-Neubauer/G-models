@@ -114,7 +114,7 @@ model {
   
  
     // model for within grid sd, hierarchical across islands
-  iiscale ~ cauchy(0,1);
+  iscale ~ cauchy(0,1);
   #gscale ~ cauchy(0,100);
   #gmscale ~ cauchy(0,100);
   
