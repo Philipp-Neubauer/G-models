@@ -1,6 +1,6 @@
 functions {
   /**
-  * Return the log probability of a proper conditional autoregressive (CAR) prior 
+  * Return the log probability of a proper conditio   autoregressive (CAR) prior 
   * with a sparse representation for the adjacency matrix
   *
   * @param phi Vector containing the parameters with a CAR prior
@@ -77,11 +77,13 @@ parameters {
   vector[N_groups] group_fx;
   real<lower=0> island_sig;
   real<lower=0> group_sig;
-  real<lower=0> grid_sig;
+  vector<lower=0>[N_islands] grid_sig;
+  real<lower=0> grid_mean;
+  real<lower=0> grid_var;
   vector[N_grid] grid_fx;
   real<lower=0, upper=1> rho[N_islands]; 
-  //real<lower=0, upper=1> rho_mean; 
-  //real<lower=0> rho_prec;  
+  real<lower=0, upper=1> rho_mean; 
+  real<lower=0> rho_prec;  
   real omean;
   real zmean;
   matrix[N_islands,K] theta;
@@ -96,9 +98,10 @@ transformed parameters{
   
  imean = rows_dot_product(Q_ast,theta[ISLAND,1:K])+ island_sig*island_fx[ISLAND]+group_sig*group_fx[GROUP]+ grid_sig*grid_fx[GRID];
 
+ iscale = 1/iiscale
  mu = inv_logit(omean+imean[ii_notzero]);
- a  =    mu  * iscale;//[ISLAND[ii_notzero]];
- b  = (1-mu) * iscale;//[ISLAND[ii_notzero]];
+ a  =    mu  / iscale;//[ISLAND[ii_notzero]];
+ b  = (1-mu) / iscale;//[ISLAND[ii_notzero]];
  
 
 }
@@ -110,7 +113,7 @@ model {
   
  
     // model for within grid sd, hierarchical across islands
-  iscale ~ cauchy(0,5);
+  iiscale ~ cauchy(0,1);
   #gscale ~ cauchy(0,100);
   #gmscale ~ cauchy(0,100);
   
@@ -128,9 +131,9 @@ model {
   island_sig ~ cauchy(0,2);
   group_fx ~ normal(0,1);
   group_sig ~ cauchy(0,2);
-  //grid_sig ~ cauchy(grid_mean,grid_var);
-  //grid_mean ~ normal(0,1);
-  grid_sig ~ cauchy(0,2);
+  grid_sig ~ cauchy(grid_mean,grid_var);
+  grid_mean ~ normal(0,1);
+  grid_var ~ cauchy(0,2);
   t_mean ~ normal(0,1);
   t_var ~ cauchy(0,2);
   
@@ -143,12 +146,12 @@ model {
     ppos = ppos + W_n[i];
   }
   
- // rho_mean  ~ beta(2, 2);
- // rho_prec  ~ normal(0,1);
- // a_r  = rho_mean  * rho_prec;
- // b_r  = (1-rho_mean)  * rho_prec;
- //  
- rho ~ beta(2, 2);
+ rho_mean  ~ beta(2, 2);
+ rho_prec  ~ cauchy(0,1);
+ a_r  = rho_mean  / rho_prec;
+ b_r  = (1-rho_mean)  / rho_prec;
+
+ rho ~ beta(a_r, b_r);
   
 }
 generated quantities{

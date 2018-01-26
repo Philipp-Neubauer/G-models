@@ -302,15 +302,20 @@ summary(res)
 ```
 
 ## Macroalgae model fit
-```{r fig.align='center',fig.cap='Model fit from spatial model for Macroalgae',fig.height=12,fig.width=8}
+```{r fig.align='center',fig.cap='Model fit from spatial model for Macroalgae',fig.height=12,fig.width=12,dev='pdf'}
 ry <- res$summary.fitted.values$mode-cdata$mean_species
+
+ ISLANDS <- c('KUR','MID','PHR','LIS','LAY','MAR','FFS','NEC','NIH','KAU','NII','OAH','MOL','LAN','MAI','HAW','JOH','WAK','FDP','MAU','ASC','AGR','PAG','ALA','GUG','SAR','SAI','TIN','AGU','ROT','GUA','KIN','PAL','HOW','BAK','JAR','SWA','OFU','TAU','TUT','ROS')
+
+ ISLANDS <- ISLANDS[!is.na(match(ISLANDS,unique(cdata$island)))]
+ 
 rys <- data.frame(Bearing = cdata$BEARING,
                   Residual = ry,
                   Predicted = res$summary.fitted.values$mode,
                   Predicted_low = res$summary.fitted.values$`0.025quant`,
                   Predicted_high = res$summary.fitted.values$`0.975quant`,
                   Observed = cdata$mean_species,
-                  i=cdata$island)
+                  i=factor(cdata$island, levels = ISLANDS))
 
 ggplot(rys,aes(x=Observed,y=Predicted)) + 
   geom_line() + 
@@ -318,7 +323,7 @@ ggplot(rys,aes(x=Observed,y=Predicted)) +
   facet_wrap(~as.factor(i),scales='free',ncol=5)
 ```
 
-```{r fig.align='center',fig.cap='Model fit from spatial model for Macroalgae by bearing, data in black, predictions in blue',fig.height=12,fig.width=8}  
+```{r fig.align='center',fig.cap='Model fit from spatial model for Macroalgae by bearing, data in black, predictions in blue',fig.height=12,fig.width=12,dev='pdf'}  
   
 ggplot(rys,aes(x=Bearing,y=Predicted)) + 
   geom_line(col='skyblue') + 
@@ -343,16 +348,17 @@ ggplot(acc) +
 
 ## Macroalgae - by island effects
 
-```{r fig.align='center',fig.cap='Estimated deviation of individual island regression slopes from over-all trend for Macroalgae',fig.height=12,fig.width=8}
-iwp <- res$summary.random$island_IWP
-ted <- res$summary.random$island_TED
-iwpxted <- res$summary.random$island_INT
+```{r fig.align='center',fig.cap='Estimated deviation of individual island regression slopes from over-all trend for Macroalgae',fig.height=12,fig.width=12,dev='png',dpi=600}
+
+iwp <- data.frame(t(apply(res$summary.random$island_IWP,1,'+',c(0,as.numeric(res$summary.fixed[2,])))))
+ted <- data.frame(t(apply(res$summary.random$island_TED,1,'+',c(0,as.numeric(res$summary.fixed[3,])))))
+iwpxted <- data.frame(t(apply(res$summary.random$island_INT,1,'+',c(0,as.numeric(res$summary.fixed[4,])))))
 
 beat <- data.frame(bind_rows(list(iwp=iwp,ted=ted,int=iwpxted),.id = 'Var'))
 beat[,2] <- sort(unique(cdata$island))
 beat$humans <- as.logical(tapply(cdata$population_status,cdata$island,unique))
 colnames(beat)[[2]] <- 'Island'
-
+beat$Island <- factor(beat$Island,levels = ISLANDS)
 ggplot(beat) +
   geom_pointrange(aes(x=Var,y=X0.5quant,ymin=X0.025quant,ymax=X0.975quant,col=as.factor(humans))) +
   geom_hline(aes(yintercept=0)) +
