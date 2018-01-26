@@ -100,7 +100,6 @@ transformed parameters{
 imeana = rows_dot_product(Q_ast,theta[ISLAND,1:K])+ island_sig*island_fx[ISLAND]+group_sig*group_fx[GROUP];
  imean = imeana + grid_sig[ISLAND].*grid_fx[GRID];
 
- iscale = 1/iiscale
  mu = inv_logit(omean+imean[ii_notzero]);
  a  =    mu  / iscale;//[ISLAND[ii_notzero]];
  b  = (1-mu) / iscale;//[ISLAND[ii_notzero]];
